@@ -1,0 +1,4 @@
+graphdb:
+  url: http://localhost:7200/repositories/socatel-test
+  username: admin
+  password: root
