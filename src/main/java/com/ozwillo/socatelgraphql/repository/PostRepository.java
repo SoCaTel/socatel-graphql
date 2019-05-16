@@ -23,7 +23,7 @@ public class PostRepository {
     }
 
     public ArrayList<HashMap<String, String>> getPosts() {
-        ArrayList<HashMap<String, String>> result = new ArrayList<HashMap<String, String>>();
+        ArrayList<HashMap<String, String>> result = new ArrayList<>();
         try {
             TupleQuery tupleQuery = repositoryConnection.prepareTupleQuery(QueryLanguage.SPARQL,
                     "PREFIX socatel: <http://www.everis.es/SoCaTel/ontology#>\n" +
