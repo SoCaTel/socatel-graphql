@@ -25,6 +25,10 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
+bootRun {
+	args = ["--spring.profiles.active=dev"]
+}
+
 bootJar {
 	launchScript()
 }

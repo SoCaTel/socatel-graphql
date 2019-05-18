@@ -3,6 +3,12 @@
 
     <springProperty scope="context" name="logfile" source="logging.file" defaultValue="./build/logs/socatel-graphql.log"/>
 
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %highlight(%-5level) [%thread] %logger{10} [%file:%line] %msg%n</pattern>
+        </encoder>
+    </appender>
+
     <appender name="FILE-ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${logfile}</file>
 
@@ -19,8 +25,15 @@
         </encoder>
     </appender>
 
+    <logger name="graphql" level="INFO"/>
+
     <root level="INFO">
-        <appender-ref ref="FILE-ROLLING"/>
+        <springProfile name="dev">
+            <appender-ref ref="STDOUT"/>
+        </springProfile>
+        <springProfile name="!dev">
+            <appender-ref ref="FILE-ROLLING"/>
+        </springProfile>
     </root>
 
 </configuration>
