@@ -1,11 +1,11 @@
 type Query {
-    postById(identifier: ID): Post
-    posts: [Post]
+    postById(identifier: ID!): Post
+    posts: [Post!]!
 }
 
 type Post {
-    identifier: ID
-    description: String
-    num_likes: Int
-    num_replies: Int
+    identifier: ID!
+    description: String!
+    num_likes: Int!
+    num_replies: Int!
 }
