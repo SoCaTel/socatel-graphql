@@ -6,3 +6,7 @@ graphdb:
 spring.security.user:
   name: user
   password: password
+
+management.endpoints.enabled-by-default: false
+management.endpoints.web.exposure.include: health
+management.endpoint.health.enabled: true
