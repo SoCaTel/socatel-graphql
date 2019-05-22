@@ -75,7 +75,6 @@ public class PostRepository {
                     "}");
 
             TupleQueryResult tupleQueryResult = tupleQuery.evaluate();
-            tupleQueryResult.getBindingNames().stream().iterator().forEachRemaining(System.out::println);
 
             if(tupleQueryResult.hasNext()) {
                 BindingSet bindingSet = tupleQueryResult.next();
