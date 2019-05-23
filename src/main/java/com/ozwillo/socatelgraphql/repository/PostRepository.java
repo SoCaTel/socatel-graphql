@@ -3,6 +3,8 @@ package com.ozwillo.socatelgraphql.repository;
 import org.eclipse.rdf4j.query.*;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -10,6 +12,8 @@ import java.util.*;
 
 @Component
 public class PostRepository {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PostRepository.class);
 
     private RepositoryConnection repositoryConnection;
 
@@ -59,7 +63,7 @@ public class PostRepository {
     }
 
     public Map<String, String> getPost(String identifier) {
-        HashMap<String, String> result = new HashMap<>();
+        Map<String, String> result = null;
         try {
             TupleQuery tupleQuery = repositoryConnection.prepareTupleQuery(QueryLanguage.SPARQL,
                     "PREFIX socatel: <http://www.everis.es/SoCaTel/ontology#>\n" +
@@ -77,8 +81,12 @@ public class PostRepository {
             TupleQueryResult tupleQueryResult = tupleQuery.evaluate();
 
             if(tupleQueryResult.hasNext()) {
+
+                LOGGER.debug("Got a result for {}", identifier);
+
                 BindingSet bindingSet = tupleQueryResult.next();
 
+                result = new HashMap<>();
                 result.put("identifier", identifier);
 
                 for (Binding binding : bindingSet) {

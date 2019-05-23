@@ -26,6 +26,7 @@
     </appender>
 
     <logger name="graphql" level="INFO"/>
+    <logger name="com.ozwillo.socatelgraphql" level="DEBUG"/>
 
     <root level="INFO">
         <springProfile name="dev">
