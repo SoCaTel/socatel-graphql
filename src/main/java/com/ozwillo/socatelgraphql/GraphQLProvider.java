@@ -13,8 +13,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.FileCopyUtils;
 
 import javax.annotation.PostConstruct;
-import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import static graphql.schema.idl.TypeRuntimeWiring.newTypeWiring;
 
@@ -36,9 +36,9 @@ public class GraphQLProvider {
 
     @PostConstruct
     public void init() throws IOException {
-        File schemaFile = (new ClassPathResource("schema/post.graphqls")).getFile();
-        byte[] sdl = FileCopyUtils.copyToByteArray(schemaFile);
-        GraphQLSchema graphQLSchema = buildSchema(new String(sdl));
+        ClassPathResource schemaResource = new ClassPathResource("schema/post.graphqls");
+        byte[] sdl = FileCopyUtils.copyToByteArray(schemaResource.getInputStream());
+        GraphQLSchema graphQLSchema = buildSchema(new String(sdl, StandardCharsets.UTF_8));
         this.graphQL = GraphQL.newGraphQL(graphQLSchema).build();
     }
 
