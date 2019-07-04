@@ -1,6 +1,7 @@
 plugins {
 	id 'org.springframework.boot' version '2.1.5.RELEASE'
 	id 'java'
+	id "com.palantir.docker" version "0.22.1"
 }
 
 apply plugin: 'io.spring.dependency-management'
@@ -41,4 +42,17 @@ bootRun {
 
 bootJar {
 	launchScript()
+}
+
+task unpack(type: Copy) {
+	dependsOn bootJar
+	from tasks.bootJar.outputs.files.singleFile
+	into "build/dependency"
+}
+
+docker {
+	name "ozwillo/${bootJar.archiveBaseName.get()}"
+	files tasks.bootJar.outputs.files.singleFile
+	copySpec.from(tasks.unpack.outputs).into("dependency")
+	buildArgs(['DEPENDENCY': "dependency"])
 }
