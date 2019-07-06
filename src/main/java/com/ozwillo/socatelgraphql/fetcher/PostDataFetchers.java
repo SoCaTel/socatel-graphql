@@ -21,6 +21,9 @@ public class PostDataFetchers {
     }
 
     public DataFetcher getPostsDataFetcher() {
-        return dataFetchingEnvironment -> postRepository.getPosts();
+        return dataFetchingEnvironment ->
+                postRepository.getPosts(dataFetchingEnvironment.getArgument("creationDateFrom"),
+                        dataFetchingEnvironment.getArgument("creationDateTo"),
+                        dataFetchingEnvironment.getArgument("screenName"));
     }
 }
