@@ -37,6 +37,7 @@
             <appender-ref ref="STDOUT"/>
         </springProfile>
         <springProfile name="!dev">
+            <appender-ref ref="STDOUT"/>
             <appender-ref ref="JSON-FILE-ROLLING"/>
         </springProfile>
     </root>
