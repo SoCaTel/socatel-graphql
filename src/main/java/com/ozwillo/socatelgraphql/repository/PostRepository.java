@@ -1,5 +1,6 @@
 package com.ozwillo.socatelgraphql.repository;
 
+import org.eclipse.rdf4j.model.vocabulary.FOAF;
 import org.eclipse.rdf4j.query.*;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
@@ -48,23 +49,23 @@ public class PostRepository {
 
         Variable post = var("post");
         GraphPattern graphPattern = post.isA((SOCATEL.iri("Post")))
-                .andHas(SOCATEL.iri("identifier"), var("identifier"))
-                .andHas(SOCATEL.iri("description"), var("description"))
-                .andHas(SOCATEL.iri("creationDate"), var("creationDate"))
-                .andHas(SOCATEL.iri("num_likes"), var("num_likes"))
-                .andHas(SIOC.iri("num_replies"), var("num_replies"));
+                .andHas(SOCATEL.iri("identifier"), var("id"))
+                .andHas(SOCATEL.iri("description"), var("full_text"))
+                .andHas(SOCATEL.iri("creationDate"), var("created_at"))
+                .andHas(SOCATEL.iri("num_likes"), var("favorite_count"))
+                .andHas(SIOC.iri("num_replies"), var("retweet_count"));
 
         // TODO does not seem to be parsed and pushed into the TS yet but it should be
         // .andHas(SIOC.iri("name"), var("screen_name"));
 
         List<Expression> expressions = new ArrayList<>();
         if (creationDateFrom != null) {
-            expressions.add(Expressions.gte(var("creationDate"),
+            expressions.add(Expressions.gte(var("created_at"),
                     literalOfType(creationDateFrom, XSD.iri("dateTime"))));
         }
 
         if (creationDateTo != null) {
-            expressions.add(Expressions.lte(var("creationDate"),
+            expressions.add(Expressions.lte(var("created_at"),
                     literalOfType(creationDateTo, XSD.iri("dateTime"))));
         }
 
@@ -79,8 +80,8 @@ public class PostRepository {
 
         SelectQuery selectQuery = Queries.SELECT()
                 .prefix(SOCATEL, RDF, SIOC)
-                .select(var("post"), var("identifier"), var("description"),
-                        var("creationDate"), var("num_likes"), var("num_replies"))
+                .select(var("post"), var("id"), var("full_text"), var("lang"),
+                        var("created_at"), var("favorite_count"), var("retweet_count"))
 
                 // TODO does not seem to be parsed yet but it should be
                 //, var("screen_name"))
@@ -116,15 +117,15 @@ public class PostRepository {
             Variable post = var("post");
             GraphPattern graphPattern = post.isA((SOCATEL.iri("Post")))
                     .andHas(SOCATEL.iri("identifier"), identifier)
-                    .andHas(SOCATEL.iri("description"), var("description"))
-                    .andHas(SOCATEL.iri("creationDate"), var("creationDate"))
-                    .andHas(SOCATEL.iri("num_likes"), var("num_likes"))
-                    .andHas(SIOC.iri("num_replies"), var("num_replies"));
+                    .andHas(SOCATEL.iri("description"), var("full_text"))
+                    .andHas(SOCATEL.iri("creationDate"), var("created_at"))
+                    .andHas(SOCATEL.iri("num_likes"), var("favorite_count"))
+                    .andHas(SIOC.iri("num_replies"), var("retweet_count"));
 
             SelectQuery selectQuery = Queries.SELECT()
                     .prefix(SOCATEL, RDF, SIOC)
-                    .select(var("post"), var("description"), var("creationDate"),
-                            var("num_likes"), var("num_replies"))
+                    .select(var("post"), var("full_text"), var("created_at"),
+                            var("favorite_count"), var("retweet_count"))
                     .where(graphPattern);
 
             LOGGER.debug("Issuing SPARQL query :\n{}", selectQuery.getQueryString());
@@ -138,7 +139,7 @@ public class PostRepository {
                 BindingSet bindingSet = tupleQueryResult.next();
 
                 result = new HashMap<>();
-                result.put("identifier", identifier);
+                result.put("id", identifier);
 
                 for (Binding binding : bindingSet) {
                     result.put(binding.getName(), binding.getValue().stringValue());

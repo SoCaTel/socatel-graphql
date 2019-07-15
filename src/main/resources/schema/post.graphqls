@@ -1,12 +1,12 @@
 type Query {
-    postById(identifier: ID!): Post
+    postById(id: ID!): Post
     posts(creationDateFrom: String, creationDateTo: String, screenName: String): [Post!]!
 }
 
 type Post {
-    identifier: ID!
-    description: String!
-    creationDate: String!
-    num_likes: Int!
-    num_replies: Int!
+    id: ID!
+    full_text: String!
+    created_at: String!
+    favorite_count: Int!
+    retweet_count: Int!
 }
