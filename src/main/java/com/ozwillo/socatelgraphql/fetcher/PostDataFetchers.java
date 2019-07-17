@@ -15,7 +15,7 @@ public class PostDataFetchers {
 
     public DataFetcher getPostByIdDataFetcher() {
         return dataFetchingEnvironment -> {
-            String identifier = dataFetchingEnvironment.getArgument("id");
+            String identifier = dataFetchingEnvironment.getArgument("identifier");
             return postRepository.getPost(identifier);
         };
     }
