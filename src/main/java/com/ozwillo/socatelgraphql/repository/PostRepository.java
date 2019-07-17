@@ -30,6 +30,8 @@ public class PostRepository {
     private static Prefix SIOC = prefix("sioc", iri("http://rdfs.org/sioc/ns#"));
     private static Prefix RDF = prefix("rdf", iri("http://www.w3.org/1999/02/22-rdf-syntax-ns#"));
     private static Prefix XSD = prefix("xsd", iri("http://www.w3.org/2001/XMLSchema#"));
+    private static Prefix GN = prefix("gn", iri("http://www.geonames.org/ontology#"));
+    private static Prefix FOAF = prefix("foaf", iri("http://xmlns.com/foaf/0.1/"));
 
     private RepositoryConnection repositoryConnection;
 
@@ -51,11 +53,29 @@ public class PostRepository {
                 .andHas(SOCATEL.iri("identifier"), var("identifier"))
                 .andHas(SOCATEL.iri("description"), var("description"))
                 .andHas(SOCATEL.iri("creationDate"), var("creationDate"))
+                .andHas(SOCATEL.iri("language"), var("language"))
                 .andHas(SOCATEL.iri("num_likes"), var("num_likes"))
-                .andHas(SIOC.iri("num_replies"), var("num_replies"));
+                .andHas(SIOC.iri("num_replies"), var("num_replies"))
+                .andHas(SOCATEL.iri("location"), var("location"))
+                .andHas(SIOC.iri("has_owner"), var("owner"))
+                .andHas(SOCATEL.iri("createdBy"), var("creator"));
 
-        // TODO does not seem to be parsed and pushed into the TS yet but it should be
-        // .andHas(SIOC.iri("name"), var("screen_name"));
+        Variable location = var("location");
+        GraphPattern graphPatternLocation = location.has(GN.iri("name"), var("location_name"))
+                .andHas(GN.iri("alternateName"), var("location_alternateName"))
+                .andHas(GN.iri("countryCode"), var("location_countryCode"));
+
+        Variable owner = var("owner");
+        GraphPattern graphPatternOwner = owner.has(SOCATEL.iri("identifier"), var("owner_identifier"))
+                .andHas(SOCATEL.iri("title"), var("owner_title"))
+                .andHas(SOCATEL.iri("description"), var("owner_description"))
+                .andHas(SOCATEL.iri("webLink"), var("owner_webLink"))
+                .andHas(SOCATEL.iri("language"), var("owner_language"))
+                .andHas(SOCATEL.iri("num_likes"), var("owner_num_likes"));
+
+        Variable creator = var("creator");
+        GraphPattern graphPatternCreator = creator.has(FOAF.iri("name"), var("creator_name"))
+                .andHas(FOAF.iri("username"), var("creator_username"));
 
         List<Expression> expressions = new ArrayList<>();
         if (creationDateFrom != null) {
@@ -78,13 +98,17 @@ public class PostRepository {
         }
 
         SelectQuery selectQuery = Queries.SELECT()
-                .prefix(SOCATEL, RDF, SIOC)
+                .prefix(SOCATEL, RDF, SIOC, GN, FOAF)
                 .select(var("post"), var("identifier"), var("description"),
-                        var("creationDate"), var("num_likes"), var("num_replies"))
-
-                // TODO does not seem to be parsed yet but it should be
-                //, var("screen_name"))
+                        var("creationDate"), var("language"), var("num_likes"),
+                        var("num_replies"), var("location_name"), var("location_alternateName"),
+                        var("location_countryCode"), var("owner_identifier"), var("owner_title"),
+                        var("owner_description"), var("owner_webLink"), var("owner_language"),
+                        var("owner_num_likes"), var("creator_name"), var("creator_username"))
                 .where(graphPattern)
+                .where(graphPatternLocation)
+                .where(graphPatternOwner)
+                .where(graphPatternCreator)
                 .limit(100);
 
         LOGGER.debug("Issuing SPARQL query :\n{}", selectQuery.getQueryString());

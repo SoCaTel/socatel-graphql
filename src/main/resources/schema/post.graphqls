@@ -7,6 +7,18 @@ type Post {
     identifier: ID!
     description: String!
     creationDate: String!
+    language: String!
     num_likes: Int!
     num_replies: Int!
+    location_name: String!
+    location_alternateName: String!
+    location_countryCode: String!
+    owner_identifier: String!
+    owner_title: String!
+    owner_description: String!
+    owner_webLink: String!
+    owner_language: String!
+    owner_num_likes: Int!
+    creator_name: String!
+    creator_username: String!
 }
