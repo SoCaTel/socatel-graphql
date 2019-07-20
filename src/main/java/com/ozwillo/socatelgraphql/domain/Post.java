@@ -18,6 +18,8 @@ public class Post {
 
     private Owner owner;
 
+    private Creator creator;
+
     public Post() {
     }
 
@@ -83,5 +85,13 @@ public class Post {
 
     public void setOwner(Owner owner) {
         this.owner = owner;
+    }
+
+    public Creator getCreator() {
+        return creator;
+    }
+
+    public void setCreator(Creator creator) {
+        this.creator = creator;
     }
 }

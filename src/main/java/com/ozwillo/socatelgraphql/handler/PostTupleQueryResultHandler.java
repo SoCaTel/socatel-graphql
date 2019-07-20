@@ -1,13 +1,14 @@
 package com.ozwillo.socatelgraphql.handler;
 
-import com.ozwillo.socatelgraphql.domain.DTO.PostDTO;
+import com.ozwillo.socatelgraphql.domain.Creator;
+import com.ozwillo.socatelgraphql.domain.Location;
+import com.ozwillo.socatelgraphql.domain.Owner;
 import com.ozwillo.socatelgraphql.domain.Post;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryResultHandlerException;
 import org.eclipse.rdf4j.query.TupleQueryResultHandler;
 import org.eclipse.rdf4j.query.TupleQueryResultHandlerException;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
-import org.modelmapper.ModelMapper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,15 +16,12 @@ import java.util.List;
 
 public class PostTupleQueryResultHandler implements TupleQueryResultHandler {
 
-    private ModelMapper modelMapper;
-
     private RepositoryConnection repositoryConnection;
 
     private List<Post> postList;
 
     public PostTupleQueryResultHandler(RepositoryConnection repositoryConnection) {
         this.postList = new ArrayList<>();
-        this.modelMapper = new ModelMapper();
         this.repositoryConnection = repositoryConnection;
     }
 
@@ -47,26 +45,36 @@ public class PostTupleQueryResultHandler implements TupleQueryResultHandler {
 
     @Override
     public void handleSolution(BindingSet bindingSet) throws TupleQueryResultHandlerException {
-        PostDTO postDTO = new PostDTO();
+        Post post = new Post();
 
-        postDTO.setIdentifier(bindingSet.getValue("identifier").stringValue());
-        postDTO.setDescription(bindingSet.getValue("description").stringValue());
-        postDTO.setCreationDate(bindingSet.getValue("creationDate").stringValue());
-        postDTO.setLanguage(bindingSet.getValue("language").stringValue());
-        postDTO.setNumLikes(Integer.valueOf(bindingSet.getValue("num_likes").stringValue()));
-        postDTO.setNumReplies(Integer.valueOf(bindingSet.getValue("num_replies").stringValue()));
-        postDTO.setLocationName(bindingSet.getValue("location_name").stringValue());
-        postDTO.setLocationAlternateName(bindingSet.getValue("location_alternateName").stringValue());
-        postDTO.setLocationCountryCode(bindingSet.getValue("location_countryCode").stringValue());
-        postDTO.setOwnerIdentifier(bindingSet.getValue("owner_identifier").stringValue());
-        postDTO.setOwnerTitle(bindingSet.getValue("owner_title").stringValue());
-        postDTO.setDescription(bindingSet.getValue("owner_description").stringValue());
-        postDTO.setOwnerWebLink(bindingSet.getValue("owner_webLink").stringValue());
-        postDTO.setOwnerLanguage(bindingSet.getValue("owner_language").stringValue());
-        postDTO.setOwnerNumLikes(Integer.valueOf(bindingSet.getValue("owner_num_likes").stringValue()));
-        postDTO.setCreatorName(bindingSet.getValue("creator_name").stringValue());
+        Location location = new Location();
+        location.setName(bindingSet.getValue("location_name").stringValue());
+        location.setAlternateName(bindingSet.getValue("location_alternateName").stringValue());
+        location.setCountryCode(bindingSet.getValue("location_countryCode").stringValue());
 
-        postList.add(this.modelMapper.map(postDTO, Post.class));
+        Owner owner = new Owner();
+        owner.setIdentifier(bindingSet.getValue("owner_identifier").stringValue());
+        owner.setTitle(bindingSet.getValue("owner_title").stringValue());
+        owner.setDescription(bindingSet.getValue("owner_description").stringValue());
+        owner.setWebLink(bindingSet.getValue("owner_webLink").stringValue());
+        owner.setLanguage(bindingSet.getValue("owner_language").stringValue());
+        owner.setNumLikes(Integer.valueOf(bindingSet.getValue("owner_num_likes").stringValue()));
+
+        Creator creator = new Creator();
+        creator.setName(bindingSet.getValue("creator_name").stringValue());
+        creator.setUsername(bindingSet.getValue("creator_username").stringValue());
+
+        post.setIdentifier(bindingSet.getValue("identifier").stringValue());
+        post.setDescription(bindingSet.getValue("description").stringValue());
+        post.setCreationDate(bindingSet.getValue("creationDate").stringValue());
+        post.setLanguage(bindingSet.getValue("language").stringValue());
+        post.setNumLikes(Integer.valueOf(bindingSet.getValue("num_likes").stringValue()));
+        post.setNumReplies(Integer.valueOf(bindingSet.getValue("num_replies").stringValue()));
+        post.setLocation(location);
+        post.setOwner(owner);
+        post.setCreator(creator);
+
+        postList.add(post);
     }
 
     public List<Post> getPostList() {

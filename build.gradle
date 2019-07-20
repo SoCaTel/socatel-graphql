@@ -35,7 +35,6 @@ dependencies {
 	implementation 'org.eclipse.rdf4j:rdf4j-queryresultio-sparqlxml:2.5.3'
 	implementation 'ch.qos.logback.contrib:logback-json-classic:0.1.5'
 	implementation 'ch.qos.logback.contrib:logback-jackson:0.1.5'
-	implementation 'org.modelmapper:modelmapper:2.3.5'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
