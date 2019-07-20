@@ -1,23 +1,29 @@
 package com.ozwillo.socatelgraphql.handler;
 
 import com.ozwillo.socatelgraphql.domain.DTO.PostDTO;
+import com.ozwillo.socatelgraphql.domain.Post;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryResultHandlerException;
 import org.eclipse.rdf4j.query.TupleQueryResultHandler;
 import org.eclipse.rdf4j.query.TupleQueryResultHandlerException;
+import org.modelmapper.ModelMapper;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
 public class PostTupleQueryResultHandler implements TupleQueryResultHandler {
 
+    private ModelMapper modelMapper;
 
-    private List<PostDTO> postDTOList;
+    private List<Post> postList;
 
 
     public PostTupleQueryResultHandler() {
         super();
-        this.postDTOList = new ArrayList<PostDTO>();
+        this.modelMapper = new ModelMapper();
+        this.postList = new ArrayList<>();
     }
 
     @Override
@@ -57,12 +63,11 @@ public class PostTupleQueryResultHandler implements TupleQueryResultHandler {
         postDTO.setOwnerLanguage(bindingSet.getValue("owner_language").stringValue());
         postDTO.setOwnerNumLikes(Integer.valueOf(bindingSet.getValue("owner_num_likes").stringValue()));
         postDTO.setCreatorName(bindingSet.getValue("creator_name").stringValue());
-        postDTO.setCreatorName(bindingSet.getValue("creator_username").stringValue());
 
-        postDTOList.add(postDTO);
+        postList.add(modelMapper.map(postDTO, Post.class));
     }
 
-    public List<PostDTO> getPostDTO() {
-        return this.postDTOList;
+    public List<Post> getPostList() {
+        return this.postList;
     }
 }
