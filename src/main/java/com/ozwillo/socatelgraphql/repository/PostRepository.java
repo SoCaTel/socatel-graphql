@@ -9,19 +9,18 @@ import org.eclipse.rdf4j.repository.http.HTTPRepository;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
+import org.eclipse.rdf4j.sparqlbuilder.core.Projectable;
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable;
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries;
 import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern;
+import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.var;
@@ -54,34 +53,7 @@ public class PostRepository {
 
         ArrayList<Post> postList = new ArrayList<>();
 
-        Variable post = var("post");
-        GraphPattern graphPattern = post.isA((SOCATEL.iri("Post")))
-                .andHas(SOCATEL.iri("identifier"), var("identifier"))
-                .andHas(SOCATEL.iri("description"), var("description"))
-                .andHas(SOCATEL.iri("creationDate"), var("creationDate"))
-                .andHas(SOCATEL.iri("language"), var("language"))
-                .andHas(SOCATEL.iri("num_likes"), var("num_likes"))
-                .andHas(SIOC.iri("num_replies"), var("num_replies"))
-                .andHas(SOCATEL.iri("location"), var("location"))
-                .andHas(SIOC.iri("has_owner"), var("owner"))
-                .andHas(SOCATEL.iri("createdBy"), var("creator"));
-
-        Variable location = var("location");
-        GraphPattern graphPatternLocation = location.has(GN.iri("name"), var("location_name"))
-                .andHas(GN.iri("alternateName"), var("location_alternateName"))
-                .andHas(GN.iri("countryCode"), var("location_countryCode"));
-
-        Variable owner = var("owner");
-        GraphPattern graphPatternOwner = owner.has(SOCATEL.iri("identifier"), var("owner_identifier"))
-                .andHas(SOCATEL.iri("title"), var("owner_title"))
-                .andHas(SOCATEL.iri("description"), var("owner_description"))
-                .andHas(SOCATEL.iri("webLink"), var("owner_webLink"))
-                .andHas(SOCATEL.iri("language"), var("owner_language"))
-                .andHas(SOCATEL.iri("num_likes"), var("owner_num_likes"));
-
-        Variable creator = var("creator");
-        GraphPattern graphPatternCreator = creator.has(FOAF.iri("name"), var("creator_name"))
-                .andHas(FOAF.iri("username"), var("creator_username"));
+        GraphPattern postGraphPattern = buildPostGraphPattern(Optional.empty());
 
         List<Expression> expressions = new ArrayList<>();
         if (creationDateFrom != null) {
@@ -100,21 +72,14 @@ public class PostRepository {
         }
 
         if (!expressions.isEmpty()) {
-            graphPattern = graphPattern.filter(Expressions.and(expressions.toArray(new Expression[expressions.size()])));
+            postGraphPattern = postGraphPattern.filter(Expressions.and(expressions.toArray(new Expression[expressions.size()])));
         }
 
-        SelectQuery selectQuery = Queries.SELECT()
-                .prefix(SOCATEL, RDF, SIOC, GN, FOAF)
-                .select(var("post"), var("identifier"), var("description"),
-                        var("creationDate"), var("language"), var("num_likes"),
-                        var("num_replies"), var("location_name"), var("location_alternateName"),
-                        var("location_countryCode"), var("owner_identifier"), var("owner_title"),
-                        var("owner_description"), var("owner_webLink"), var("owner_language"),
-                        var("owner_num_likes"), var("creator_name"), var("creator_username"))
-                .where(graphPattern)
-                .where(graphPatternLocation)
-                .where(graphPatternOwner)
-                .where(graphPatternCreator)
+        SelectQuery selectQuery = buildPostSelectQuery()
+                .where(postGraphPattern)
+                .where(buildLocationGraphPattern())
+                .where(buildOwnerGraphPattern())
+                .where(buildCreatorGraphPattern())
                 .limit(100);
 
         LOGGER.debug("Issuing SPARQL query :\n{}", selectQuery.getQueryString());
@@ -136,46 +101,79 @@ public class PostRepository {
         return postList;
     }
 
-    public Map<String, String> getPost(String identifier) {
-        Map<String, String> result = null;
+    public Post getPost(String identifier) {
+        Post postResult = null;
         try {
-
-            Variable post = var("post");
-            GraphPattern graphPattern = post.isA((SOCATEL.iri("Post")))
-                    .andHas(SOCATEL.iri("identifier"), identifier)
-                    .andHas(SOCATEL.iri("description"), var("description"))
-                    .andHas(SOCATEL.iri("creationDate"), var("creationDate"))
-                    .andHas(SOCATEL.iri("num_likes"), var("num_likes"))
-                    .andHas(SIOC.iri("num_replies"), var("num_replies"));
-
-            SelectQuery selectQuery = Queries.SELECT()
-                    .prefix(SOCATEL, RDF, SIOC)
-                    .select(var("post"), var("description"), var("creationDate"),
-                            var("num_likes"), var("num_replies"))
-                    .where(graphPattern);
+            SelectQuery selectQuery = buildPostSelectQuery()
+                    .where(buildPostGraphPattern(Optional.of(identifier)))
+                    .where(buildLocationGraphPattern())
+                    .where(buildOwnerGraphPattern())
+                    .where(buildCreatorGraphPattern());
 
             LOGGER.debug("Issuing SPARQL query :\n{}", selectQuery.getQueryString());
             TupleQuery tupleQuery = repositoryConnection.prepareTupleQuery(QueryLanguage.SPARQL, selectQuery.getQueryString());
-            TupleQueryResult tupleQueryResult = tupleQuery.evaluate();
 
-            if(tupleQueryResult.hasNext()) {
-
-                LOGGER.debug("Got a result for {}", identifier);
-
-                BindingSet bindingSet = tupleQueryResult.next();
-
-                result = new HashMap<>();
-                result.put("identifier", identifier);
-
-                for (Binding binding : bindingSet) {
-                    result.put(binding.getName(), binding.getValue().stringValue());
-                }
-            }
-
-            tupleQueryResult.close();
-        } finally {
-            repositoryConnection.close();
+            PostTupleQueryResultHandler postTupleQueryResultHandler = new PostTupleQueryResultHandler(repositoryConnection);
+            tupleQuery.evaluate(postTupleQueryResultHandler);
+            postResult = postTupleQueryResultHandler.getPostList().get(0);
+        } catch (RepositoryException repositoryException) {
+            LOGGER.error("An exception occurred on graphdb repository request {}", repositoryException.getMessage());
+        } catch (MalformedQueryException malformedQueryException) {
+            LOGGER.error("Something wrong in query {}", malformedQueryException.getMessage());
         }
-        return result;
+        return postResult;
+        //TODO: return an error not found
+    }
+
+    private GraphPattern buildPostGraphPattern(Optional<String> identifier) {
+        //TODO: check of optional data
+        Variable post = var("post");
+        TriplePattern triplePattern =  post.isA((SOCATEL.iri("Post")));
+        identifier.ifPresent(s -> triplePattern.andHas(SOCATEL.iri("identifier"), s));
+        triplePattern.andHas(SOCATEL.iri("identifier"), var("identifier"))
+            .andHas(SOCATEL.iri("description"), var("description"))
+            .andHas(SOCATEL.iri("creationDate"), var("creationDate"))
+            .andHas(SOCATEL.iri("language"), var("language"))
+            .andHas(SOCATEL.iri("num_likes"), var("num_likes"))
+            .andHas(SIOC.iri("num_replies"), var("num_replies"))
+            .andHas(SOCATEL.iri("location"), var("location"))
+            .andHas(SIOC.iri("has_owner"), var("owner"))
+            .andHas(SOCATEL.iri("createdBy"), var("creator"));
+
+        return triplePattern;
+    }
+
+    private GraphPattern buildLocationGraphPattern() {
+        Variable location = var("location");
+        return location.has(GN.iri("name"), var("location_name"))
+                .andHas(GN.iri("alternateName"), var("location_alternateName"))
+                .andHas(GN.iri("countryCode"), var("location_countryCode"));
+    }
+
+    private GraphPattern buildOwnerGraphPattern() {
+        Variable owner = var("owner");
+        return owner.has(SOCATEL.iri("identifier"), var("owner_identifier"))
+                .andHas(SOCATEL.iri("title"), var("owner_title"))
+                .andHas(SOCATEL.iri("description"), var("owner_description"))
+                .andHas(SOCATEL.iri("webLink"), var("owner_webLink"))
+                .andHas(SOCATEL.iri("language"), var("owner_language"))
+                .andHas(SOCATEL.iri("num_likes"), var("owner_num_likes"));
+    }
+
+    private GraphPattern buildCreatorGraphPattern() {
+        Variable creator = var("creator");
+        return creator.has(FOAF.iri("name"), var("creator_name"))
+                .andHas(FOAF.iri("username"), var("creator_username"));
+    }
+
+    private SelectQuery buildPostSelectQuery() {
+        return Queries.SELECT()
+                .prefix(SOCATEL, RDF, SIOC, GN, FOAF)
+                .select(var("post"), var("identifier"), var("description"),
+                        var("creationDate"), var("language"), var("num_likes"),
+                        var("num_replies"), var("location_name"), var("location_alternateName"),
+                        var("location_countryCode"), var("owner_identifier"), var("owner_title"),
+                        var("owner_description"), var("owner_webLink"), var("owner_language"),
+                        var("owner_num_likes"), var("creator_name"), var("creator_username"));
     }
 }
