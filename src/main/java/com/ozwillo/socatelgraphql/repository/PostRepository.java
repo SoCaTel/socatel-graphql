@@ -1,7 +1,10 @@
 package com.ozwillo.socatelgraphql.repository;
 
+import com.ozwillo.socatelgraphql.domain.Post;
+import com.ozwillo.socatelgraphql.handler.PostTupleQueryResultHandler;
 import org.eclipse.rdf4j.query.*;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions;
@@ -15,11 +18,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.*;
+import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
+import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.var;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.*;
-import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 
 @Component
 public class PostRepository {
@@ -44,9 +50,9 @@ public class PostRepository {
         this.repositoryConnection = repository.getConnection();
     }
 
-    public ArrayList<HashMap<String, String>> getPosts(String creationDateFrom, String creationDateTo, String screenName) {
+    public ArrayList<Post> getPosts(String creationDateFrom, String creationDateTo, String screenName) {
 
-        ArrayList<HashMap<String, String>> result = new ArrayList<>();
+        ArrayList<Post> postList = new ArrayList<>();
 
         Variable post = var("post");
         GraphPattern graphPattern = post.isA((SOCATEL.iri("Post")))
@@ -89,7 +95,7 @@ public class PostRepository {
         }
 
         if (screenName != null) {
-            expressions.add(Expressions.equals(var("screen_name"),
+            expressions.add(Expressions.equals(var("creator_username"),
                     literalOf(screenName)));
         }
 
@@ -114,23 +120,20 @@ public class PostRepository {
         LOGGER.debug("Issuing SPARQL query :\n{}", selectQuery.getQueryString());
         try {
             TupleQuery tupleQuery = repositoryConnection.prepareTupleQuery(QueryLanguage.SPARQL, selectQuery.getQueryString());
+            PostTupleQueryResultHandler postTupleQueryResultHandler = new PostTupleQueryResultHandler(repositoryConnection);
 
-            TupleQueryResult tupleQueryResult = tupleQuery.evaluate();
-            while (tupleQueryResult.hasNext()) {
-                BindingSet bindingSet = tupleQueryResult.next();
-                HashMap<String, String> postResult = new HashMap<>();
+            tupleQuery.evaluate(postTupleQueryResultHandler);
 
-                for (Binding binding : bindingSet) {
-                    postResult.put(binding.getName(), binding.getValue().stringValue());
-                }
-                result.add(postResult);
-            }
+            postList.addAll(postTupleQueryResultHandler.getPostList());
 
-            tupleQueryResult.close();
-        } finally {
-            repositoryConnection.close();
+            postTupleQueryResultHandler.endQueryResult();
+        } catch (RepositoryException repositoryException) {
+            LOGGER.error("An exception occurred on graphdb repository request {}", repositoryException.getMessage());
+        } catch (MalformedQueryException malformedQueryException) {
+            LOGGER.error("Something wrong in query {}", malformedQueryException.getMessage());
         }
-        return result;
+
+        return postList;
     }
 
     public Map<String, String> getPost(String identifier) {

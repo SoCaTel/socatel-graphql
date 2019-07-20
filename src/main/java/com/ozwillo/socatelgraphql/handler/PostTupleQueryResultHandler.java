@@ -6,24 +6,25 @@ import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryResultHandlerException;
 import org.eclipse.rdf4j.query.TupleQueryResultHandler;
 import org.eclipse.rdf4j.query.TupleQueryResultHandlerException;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.modelmapper.ModelMapper;
-import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
+
 public class PostTupleQueryResultHandler implements TupleQueryResultHandler {
 
     private ModelMapper modelMapper;
 
+    private RepositoryConnection repositoryConnection;
+
     private List<Post> postList;
 
-
-    public PostTupleQueryResultHandler() {
-        super();
-        this.modelMapper = new ModelMapper();
+    public PostTupleQueryResultHandler(RepositoryConnection repositoryConnection) {
         this.postList = new ArrayList<>();
+        this.modelMapper = new ModelMapper();
+        this.repositoryConnection = repositoryConnection;
     }
 
     @Override
@@ -41,6 +42,7 @@ public class PostTupleQueryResultHandler implements TupleQueryResultHandler {
 
     @Override
     public void endQueryResult() throws TupleQueryResultHandlerException {
+        repositoryConnection.close();
     }
 
     @Override
@@ -64,7 +66,7 @@ public class PostTupleQueryResultHandler implements TupleQueryResultHandler {
         postDTO.setOwnerNumLikes(Integer.valueOf(bindingSet.getValue("owner_num_likes").stringValue()));
         postDTO.setCreatorName(bindingSet.getValue("creator_name").stringValue());
 
-        postList.add(modelMapper.map(postDTO, Post.class));
+        postList.add(this.modelMapper.map(postDTO, Post.class));
     }
 
     public List<Post> getPostList() {
