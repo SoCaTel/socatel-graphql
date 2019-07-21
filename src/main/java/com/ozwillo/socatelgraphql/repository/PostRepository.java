@@ -104,8 +104,7 @@ public class PostRepository {
         return postList;
     }
 
-    public Post getPost(String identifier) {
-        Post postResult = null;
+    public Optional<Post> getPost(String identifier) {
         try {
             SelectQuery selectQuery = buildPostSelectQuery()
                     .where(buildPostGraphPattern(Optional.of(identifier)))
@@ -118,14 +117,16 @@ public class PostRepository {
 
             PostTupleQueryResultHandler postTupleQueryResultHandler = new PostTupleQueryResultHandler(repositoryConnection);
             tupleQuery.evaluate(postTupleQueryResultHandler);
-            postResult = postTupleQueryResultHandler.getPostList().get(0);
+            return postTupleQueryResultHandler.getPostList().isEmpty() ?
+                    Optional.empty() :
+                    Optional.of(postTupleQueryResultHandler.getPostList().get(0));
         } catch (RepositoryException repositoryException) {
             LOGGER.error("An exception occurred on graphdb repository request {}", repositoryException.getMessage());
         } catch (MalformedQueryException malformedQueryException) {
             LOGGER.error("Something wrong in query {}", malformedQueryException.getMessage());
         }
-        return postResult;
-        //TODO: return an error not found
+
+        return Optional.empty();
     }
 
     private GraphPattern buildPostGraphPattern(Optional<String> identifier) {

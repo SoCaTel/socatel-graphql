@@ -2,66 +2,66 @@ package com.ozwillo.socatelgraphql.domain;
 
 public class Owner {
 
-    private String Identifier;
+    private String identifier;
 
-    private String Title;
+    private String title;
 
-    private String Description;
+    private String description;
 
-    private String WebLink;
+    private String webLink;
 
-    private String Language;
+    private String language;
 
-    private Integer NumLikes;
+    private Integer numLikes;
 
     public Owner() {
     }
 
     public String getIdentifier() {
-        return Identifier;
+        return identifier;
     }
 
     public void setIdentifier(String identifier) {
-        Identifier = identifier;
+        this.identifier = identifier;
     }
 
     public String getTitle() {
-        return Title;
+        return title;
     }
 
     public void setTitle(String title) {
-        Title = title;
+        this.title = title;
     }
 
     public String getDescription() {
-        return Description;
+        return description;
     }
 
     public void setDescription(String description) {
-        Description = description;
+        this.description = description;
     }
 
     public String getWebLink() {
-        return WebLink;
+        return webLink;
     }
 
     public void setWebLink(String webLink) {
-        WebLink = webLink;
+        this.webLink = webLink;
     }
 
     public String getLanguage() {
-        return Language;
+        return language;
     }
 
     public void setLanguage(String language) {
-        Language = language;
+        this.language = language;
     }
 
     public Integer getNumLikes() {
-        return NumLikes;
+        return numLikes;
     }
 
     public void setNumLikes(Integer numLikes) {
-        NumLikes = numLikes;
+        this.numLikes = numLikes;
     }
 }
