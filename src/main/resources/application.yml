@@ -11,20 +11,6 @@ management.endpoints.enabled-by-default: false
 management.endpoints.web.exposure.include: health
 management.endpoint.health.enabled: true
 
----
-
-spring:
-  profiles: dev
-
 logging:
   file: socatel-graphql.log
   path: ./build/logs
-
----
-
-spring:
-  profiles: docker
-
-logging:
-  file: socatel-graphql.log
-  path: /app/logs
