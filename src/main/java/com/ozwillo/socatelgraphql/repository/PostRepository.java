@@ -52,7 +52,7 @@ public class PostRepository {
         this.repositoryConnection = repository.getConnection();
     }
 
-    public ArrayList<Post> getPosts(String creationDateFrom, String creationDateTo, String screenName) {
+    public ArrayList<Post> getPosts(String creationDateFrom, String creationDateTo, String screenName, Integer offset, Integer limit) {
 
         ArrayList<Post> postList = new ArrayList<>();
 
@@ -83,7 +83,8 @@ public class PostRepository {
                 .where(buildLocationGraphPattern())
                 .where(buildOwnerGraphPattern())
                 .where(buildCreatorGraphPattern())
-                .limit(100);
+                .offset(offset)
+                .limit(limit);
 
         LOGGER.debug("Issuing SPARQL query :\n{}", selectQuery.getQueryString());
         try {

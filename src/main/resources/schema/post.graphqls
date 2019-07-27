@@ -1,6 +1,6 @@
 type Query {
     postById(identifier: ID!): Post
-    posts(creationDateFrom: String, creationDateTo: String, screenName: String): [Post!]!
+    posts(creationDateFrom: String, creationDateTo: String, screenName: String, offset: Int = 0, limit: Int = 100): [Post!]!
 }
 
 type Post {
