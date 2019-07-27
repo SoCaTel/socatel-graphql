@@ -1,12 +1,15 @@
+scalar Date
+scalar DateTime
+
 type Query {
     postById(identifier: ID!): Post
-    posts(creationDateFrom: String, creationDateTo: String, screenName: String, offset: Int = 0, limit: Int = 100): [Post!]!
+    posts(creationDateFrom: Date, creationDateTo: Date, screenName: String, offset: Int = 0, limit: Int = 100): [Post!]!
 }
 
 type Post {
     identifier: ID!
     description: String!
-    creationDate: String!
+    creationDate: DateTime!
     language: String!
     numLikes: Int!
     numReplies: Int!

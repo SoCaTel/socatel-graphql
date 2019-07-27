@@ -1,12 +1,14 @@
 package com.ozwillo.socatelgraphql.domain;
 
+import java.time.ZonedDateTime;
+
 public class Post {
 
     private String identifier;
 
     private String description;
 
-    private String creationDate;
+    private ZonedDateTime creationDate;
 
     private String language;
 
@@ -39,11 +41,11 @@ public class Post {
         this.description = description;
     }
 
-    public String getCreationDate() {
+    public ZonedDateTime getCreationDate() {
         return creationDate;
     }
 
-    public void setCreationDate(String creationDate) {
+    public void setCreationDate(ZonedDateTime creationDate) {
         this.creationDate = creationDate;
     }
 
