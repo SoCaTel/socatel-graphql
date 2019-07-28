@@ -24,4 +24,15 @@ public class Creator {
     public void setUsername(String username) {
         this.username = username;
     }
+
+    public void mapper(String key, String value) {
+        switch (key) {
+            case "creator_name":
+                name = value;
+                break;
+            case "creator_username":
+                username = value;
+                break;
+        }
+    }
 }
