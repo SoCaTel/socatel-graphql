@@ -3,14 +3,29 @@ graphdb:
   username: admin
   password: root
 
-spring.security.user:
-  name: user
-  password: password
+es:
+  indices:
+    organizations: so_organisation
 
-management.endpoints.enabled-by-default: false
-management.endpoints.web.exposure.include: health
-management.endpoint.health.enabled: true
+management:
+  endpoints:
+    enabled-by-default: false
+    web.exposure.include: health
+  endpoint:
+    health.enabled: true
 
 logging:
   file: socatel-graphql.log
   path: ./build/logs
+  # level.org.apache.http: DEBUG
+  # level.tracer: TRACE
+
+spring:
+  security.user:
+    name: user
+    password: password
+  elasticsearch:
+    jest:
+      uris: http://localhost:7200
+      username: user
+      password: password
