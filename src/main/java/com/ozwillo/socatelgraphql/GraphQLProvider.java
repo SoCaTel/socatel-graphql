@@ -2,6 +2,7 @@ package com.ozwillo.socatelgraphql;
 
 import com.ozwillo.socatelgraphql.fetcher.PostDataFetchers;
 import graphql.GraphQL;
+import graphql.scalars.ExtendedScalars;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
@@ -54,6 +55,8 @@ public class GraphQLProvider {
                 .type(newTypeWiring("Query")
                         .dataFetcher("postById", postDataFetchers.getPostByIdDataFetcher())
                         .dataFetcher("posts", postDataFetchers.getPostsDataFetcher()))
+                .scalar(ExtendedScalars.Date)
+                .scalar(ExtendedScalars.DateTime)
                 .build();
     }
 }

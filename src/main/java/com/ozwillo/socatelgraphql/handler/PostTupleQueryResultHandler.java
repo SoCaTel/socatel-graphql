@@ -10,6 +10,7 @@ import org.eclipse.rdf4j.query.TupleQueryResultHandler;
 import org.eclipse.rdf4j.query.TupleQueryResultHandlerException;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,7 +67,7 @@ public class PostTupleQueryResultHandler implements TupleQueryResultHandler {
 
         post.setIdentifier(bindingSet.getValue("identifier").stringValue());
         post.setDescription(bindingSet.getValue("description").stringValue());
-        post.setCreationDate(bindingSet.getValue("creationDate").stringValue());
+        post.setCreationDate(ZonedDateTime.parse(bindingSet.getValue("creationDate").stringValue()));
         post.setLanguage(bindingSet.getValue("language").stringValue());
         post.setNumLikes(Integer.valueOf(bindingSet.getValue("num_likes").stringValue()));
         post.setNumReplies(Integer.valueOf(bindingSet.getValue("num_replies").stringValue()));

@@ -21,6 +21,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -52,7 +54,7 @@ public class PostRepository {
         this.repositoryConnection = repository.getConnection();
     }
 
-    public ArrayList<Post> getPosts(String creationDateFrom, String creationDateTo, String screenName, Integer offset, Integer limit) {
+    public ArrayList<Post> getPosts(LocalDate creationDateFrom, LocalDate creationDateTo, String screenName, Integer offset, Integer limit) {
 
         ArrayList<Post> postList = new ArrayList<>();
 
@@ -61,12 +63,12 @@ public class PostRepository {
         List<Expression> expressions = new ArrayList<>();
         if (creationDateFrom != null) {
             expressions.add(Expressions.gte(var("creationDate"),
-                    literalOfType(creationDateFrom, XSD.iri("dateTime"))));
+                    literalOfType(creationDateFrom.format(DateTimeFormatter.ofPattern("YYYY-MM-dd")), XSD.iri("dateTime"))));
         }
 
         if (creationDateTo != null) {
             expressions.add(Expressions.lte(var("creationDate"),
-                    literalOfType(creationDateTo, XSD.iri("dateTime"))));
+                    literalOfType(creationDateTo.format(DateTimeFormatter.ofPattern("YYYY-MM-dd")), XSD.iri("dateTime"))));
         }
 
         if (screenName != null) {
