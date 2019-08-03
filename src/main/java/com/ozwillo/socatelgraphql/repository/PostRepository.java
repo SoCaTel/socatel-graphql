@@ -8,10 +8,13 @@ import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
+import org.eclipse.rdf4j.sparqlbuilder.constraint.Aggregate;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Operand;
+import org.eclipse.rdf4j.sparqlbuilder.core.Groupable;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
+import org.eclipse.rdf4j.sparqlbuilder.core.Projectable;
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable;
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries;
 import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery;
@@ -25,6 +28,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,6 +51,8 @@ public class PostRepository {
 
     private RepositoryConnection repositoryConnection;
 
+    private List<Projectable> projectables;
+
     public PostRepository(
             @Value("${graphdb.url}") String url,
             @Value("${graphdb.username}") String username,
@@ -54,6 +60,14 @@ public class PostRepository {
         HTTPRepository repository = new HTTPRepository(url);
         repository.setUsernameAndPassword(username, password);
         this.repositoryConnection = repository.getConnection();
+        this.projectables = new ArrayList<>();
+
+        projectables.addAll(Arrays.asList(var("post"), var("identifier"), var("description"),
+                var("creationDate"), var("language"), var("num_likes"),
+                var("num_replies"), var("location_name"), var("location_alternateName"),
+                var("location_countryCode"), var("owner_identifier"), var("owner_title"),
+                var("owner_description"), var("owner_webLink"), var("owner_language"),
+                var("owner_num_likes"), var("creator_name"), var("creator_username")));
     }
 
     public ArrayList<Post> getPosts(LocalDate creationDateFrom, LocalDate creationDateTo, String screenName, Integer offset, Integer limit) {
@@ -84,18 +98,13 @@ public class PostRepository {
             postGraphPattern = postGraphPattern.filter(Expressions.and(expressions.toArray(new Expression[expressions.size()])));
         }
 
-        SelectQuery selectQuery = buildPostSelectQuery()
+        SelectQuery selectQuery = buildPostSelectQuery(this.projectables)
                 .where(postGraphPattern)
                 .where(buildLocationGraphPattern(post))
                 .where(buildOwnerGraphPattern(post))
                 .where(buildCreatorGraphPattern(post))
                 .where(buildTopicGraphPattern(post))
-                .groupBy(var("post"), var("identifier"), var("description"),
-                        var("creationDate"), var("language"), var("num_likes"),
-                        var("num_replies"), var("location_name"), var("location_alternateName"),
-                        var("location_countryCode"), var("owner_identifier"), var("owner_title"),
-                        var("owner_description"), var("owner_webLink"), var("owner_language"),
-                        var("owner_num_likes"), var("creator_name"), var("creator_username"))
+                .groupBy(this.projectables.toArray(new Groupable[projectables.size()]))
                 .offset(offset)
                 .limit(limit);
 
@@ -122,7 +131,7 @@ public class PostRepository {
         try {
             Variable post = var("post");
 
-            SelectQuery selectQuery = buildPostSelectQuery()
+            SelectQuery selectQuery = buildPostSelectQuery(this.projectables)
                     .where(buildPostGraphPattern(post, Optional.of(identifier)))
                     .where(buildLocationGraphPattern(post))
                     .where(buildOwnerGraphPattern(post))
@@ -184,20 +193,13 @@ public class PostRepository {
                         .andHas(FOAF.iri("username"), var("creator_username"))).optional();
     }
 
-    private SelectQuery buildPostSelectQuery() {
-        List<Operand> operands = new ArrayList<>();
+    private SelectQuery buildPostSelectQuery(List<Projectable> projectables) {
+        List<Projectable> grouConcatProjectable = new ArrayList<>(projectables);
+        grouConcatProjectable.add(Expressions.group_concat("\",\"", var("prefLabel")).distinct().as(var("topics")));
 
-        operands.add(literalOf("distinct"));
-        operands.add(var("prefLabel"));
         return Queries.SELECT()
                 .prefix(SOCATEL, RDF, SIOC, GN, FOAF, SKOS)
-                .select(var("post"), var("identifier"), var("description"),
-                        var("creationDate"), var("language"), var("num_likes"),
-                        var("num_replies"), var("location_name"), var("location_alternateName"),
-                        var("location_countryCode"), var("owner_identifier"), var("owner_title"),
-                        var("owner_description"), var("owner_webLink"), var("owner_language"),
-                        var("owner_num_likes"), var("creator_name"), var("creator_username"),
-                        Expressions.group_concat("\",\"", var("prefLabel")).distinct().as(var("topics")));
+                .select(grouConcatProjectable.toArray(new Projectable[grouConcatProjectable.size()]));
     }
 
     private GraphPattern buildTopicGraphPattern(Variable post) {
