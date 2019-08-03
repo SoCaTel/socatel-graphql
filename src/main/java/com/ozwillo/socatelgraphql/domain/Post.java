@@ -1,6 +1,8 @@
 package com.ozwillo.socatelgraphql.domain;
 
 import java.time.ZonedDateTime;
+import java.util.Arrays;
+import java.util.List;
 
 public class Post {
 
@@ -21,6 +23,8 @@ public class Post {
     private Owner owner;
 
     private Creator creator;
+
+    private List<String> topics;
 
     public Post() {
     }
@@ -97,6 +101,14 @@ public class Post {
         this.creator = creator;
     }
 
+    public List<String> getTopics() {
+        return topics;
+    }
+
+    public void setTopics(List<String> topics) {
+        this.topics = topics;
+    }
+
     public void mapper(String key, String value) {
         switch (key) {
             case "identifier":
@@ -116,6 +128,9 @@ public class Post {
                 break;
             case "num_replies":
                 numReplies = Integer.valueOf(value);
+                break;
+            case "topics":
+                topics = Arrays.asList(value.split(","));
                 break;
         }
     }

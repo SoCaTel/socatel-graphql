@@ -16,6 +16,7 @@ type Post {
     location: Location
     owner: Owner
     creator: Creator
+    topics: [String]
 }
 
 type Location {

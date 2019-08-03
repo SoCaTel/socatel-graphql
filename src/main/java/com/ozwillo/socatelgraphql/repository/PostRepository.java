@@ -10,6 +10,7 @@ import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions;
+import org.eclipse.rdf4j.sparqlbuilder.constraint.Operand;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable;
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries;
@@ -42,6 +43,7 @@ public class PostRepository {
     private static Prefix XSD = prefix("xsd", iri("http://www.w3.org/2001/XMLSchema#"));
     private static Prefix GN = prefix("gn", iri("http://www.geonames.org/ontology#"));
     private static Prefix FOAF = prefix("foaf", iri("http://xmlns.com/foaf/0.1/"));
+    private static Prefix SKOS = prefix("skos", iri("http://www.w3.org/2004/02/skos/core#"));
 
     private RepositoryConnection repositoryConnection;
 
@@ -87,6 +89,13 @@ public class PostRepository {
                 .where(buildLocationGraphPattern(post))
                 .where(buildOwnerGraphPattern(post))
                 .where(buildCreatorGraphPattern(post))
+                .where(buildTopicGraphPattern(post))
+                .groupBy(var("post"), var("identifier"), var("description"),
+                        var("creationDate"), var("language"), var("num_likes"),
+                        var("num_replies"), var("location_name"), var("location_alternateName"),
+                        var("location_countryCode"), var("owner_identifier"), var("owner_title"),
+                        var("owner_description"), var("owner_webLink"), var("owner_language"),
+                        var("owner_num_likes"), var("creator_name"), var("creator_username"))
                 .offset(offset)
                 .limit(limit);
 
@@ -176,13 +185,25 @@ public class PostRepository {
     }
 
     private SelectQuery buildPostSelectQuery() {
+        List<Operand> operands = new ArrayList<>();
+
+        operands.add(literalOf("distinct"));
+        operands.add(var("prefLabel"));
         return Queries.SELECT()
-                .prefix(SOCATEL, RDF, SIOC, GN, FOAF)
+                .prefix(SOCATEL, RDF, SIOC, GN, FOAF, SKOS)
                 .select(var("post"), var("identifier"), var("description"),
                         var("creationDate"), var("language"), var("num_likes"),
                         var("num_replies"), var("location_name"), var("location_alternateName"),
                         var("location_countryCode"), var("owner_identifier"), var("owner_title"),
                         var("owner_description"), var("owner_webLink"), var("owner_language"),
-                        var("owner_num_likes"), var("creator_name"), var("creator_username"));
+                        var("owner_num_likes"), var("creator_name"), var("creator_username"),
+                        Expressions.group_concat("\",\"", var("prefLabel")).distinct().as(var("topics")));
+    }
+
+    private GraphPattern buildTopicGraphPattern(Variable post) {
+        Variable topic = var("topic");
+
+        return post.has(SOCATEL.iri("topic"), var("topic"))
+                .and(topic.has(SKOS.iri("prefLabel"), var("prefLabel"))).optional();
     }
 }
