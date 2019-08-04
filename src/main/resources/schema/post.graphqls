@@ -13,27 +13,27 @@ type Post {
     language: String!
     numLikes: Int!
     numReplies: Int!
-    location: Location!
-    owner: Owner!
-    creator: Creator!
+    location: Location
+    owner: Owner
+    creator: Creator
 }
 
 type Location {
-    name: String!
-    alternateName: String!
-    countryCode: String!
+    name: String
+    alternateName: String
+    countryCode: String
 }
 
 type Owner {
-    identifier: String!
-    title: String!
-    description: String!
-    webLink: String!
-    language: String!
-    numLikes: Int!
+    identifier: String
+    title: String
+    description: String
+    webLink: String
+    language: String
+    numLikes: Int
 }
 
 type Creator {
-    name: String!
-    username: String!
+    name: String
+    username: String
 }

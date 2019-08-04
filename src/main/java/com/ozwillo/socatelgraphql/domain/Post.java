@@ -96,4 +96,27 @@ public class Post {
     public void setCreator(Creator creator) {
         this.creator = creator;
     }
+
+    public void mapper(String key, String value) {
+        switch (key) {
+            case "identifier":
+                identifier = value;
+                break;
+            case "description":
+                description = value;
+                break;
+            case "creationDate":
+                creationDate = ZonedDateTime.parse(value);
+                break;
+            case "language":
+                language = value;
+                break;
+            case "num_likes":
+                numLikes = Integer.valueOf(value);
+                break;
+            case "num_replies":
+                numReplies = Integer.valueOf(value);
+                break;
+        }
+    }
 }

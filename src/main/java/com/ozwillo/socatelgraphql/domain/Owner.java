@@ -64,4 +64,27 @@ public class Owner {
     public void setNumLikes(Integer numLikes) {
         this.numLikes = numLikes;
     }
+
+    public void mapper(String key, String value) {
+        switch (key) {
+            case "owner_identifier":
+                identifier = value;
+                break;
+            case "owner_title":
+                title = value;
+                break;
+            case "owner_description":
+                description = value;
+                break;
+            case "owner_webLink":
+                webLink = value;
+                break;
+            case "owner_language":
+                language = value;
+                break;
+            case "owner_numLikes":
+                numLikes = Integer.valueOf(value);
+                break;
+        }
+    }
 }

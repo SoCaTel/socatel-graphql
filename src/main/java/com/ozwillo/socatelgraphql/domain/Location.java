@@ -34,4 +34,18 @@ public class Location {
     public void setCountryCode(String countryCode) {
         this.countryCode = countryCode;
     }
+
+    public void mapper(String key, String value) {
+        switch (key) {
+            case "location_name":
+                name = value;
+                break;
+            case "location_alternateName":
+                alternateName = value;
+                break;
+            case "location_countryCode":
+                countryCode = value;
+                break;
+        }
+    }
 }

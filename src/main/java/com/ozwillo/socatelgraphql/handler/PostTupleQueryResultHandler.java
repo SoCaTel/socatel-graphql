@@ -4,18 +4,18 @@ import com.ozwillo.socatelgraphql.domain.Creator;
 import com.ozwillo.socatelgraphql.domain.Location;
 import com.ozwillo.socatelgraphql.domain.Owner;
 import com.ozwillo.socatelgraphql.domain.Post;
-import org.eclipse.rdf4j.query.BindingSet;
-import org.eclipse.rdf4j.query.QueryResultHandlerException;
-import org.eclipse.rdf4j.query.TupleQueryResultHandler;
-import org.eclipse.rdf4j.query.TupleQueryResultHandlerException;
+import org.eclipse.rdf4j.query.*;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 
 public class PostTupleQueryResultHandler implements TupleQueryResultHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PostTupleQueryResultHandler.class);
 
     private RepositoryConnection repositoryConnection;
 
@@ -47,30 +47,20 @@ public class PostTupleQueryResultHandler implements TupleQueryResultHandler {
     @Override
     public void handleSolution(BindingSet bindingSet) throws TupleQueryResultHandlerException {
         Post post = new Post();
-
         Location location = new Location();
-        location.setName(bindingSet.getValue("location_name").stringValue());
-        location.setAlternateName(bindingSet.getValue("location_alternateName").stringValue());
-        location.setCountryCode(bindingSet.getValue("location_countryCode").stringValue());
-
         Owner owner = new Owner();
-        owner.setIdentifier(bindingSet.getValue("owner_identifier").stringValue());
-        owner.setTitle(bindingSet.getValue("owner_title").stringValue());
-        owner.setDescription(bindingSet.getValue("owner_description").stringValue());
-        owner.setWebLink(bindingSet.getValue("owner_webLink").stringValue());
-        owner.setLanguage(bindingSet.getValue("owner_language").stringValue());
-        owner.setNumLikes(Integer.valueOf(bindingSet.getValue("owner_num_likes").stringValue()));
-
         Creator creator = new Creator();
-        creator.setName(bindingSet.getValue("creator_name").stringValue());
-        creator.setUsername(bindingSet.getValue("creator_username").stringValue());
 
-        post.setIdentifier(bindingSet.getValue("identifier").stringValue());
-        post.setDescription(bindingSet.getValue("description").stringValue());
-        post.setCreationDate(ZonedDateTime.parse(bindingSet.getValue("creationDate").stringValue()));
-        post.setLanguage(bindingSet.getValue("language").stringValue());
-        post.setNumLikes(Integer.valueOf(bindingSet.getValue("num_likes").stringValue()));
-        post.setNumReplies(Integer.valueOf(bindingSet.getValue("num_replies").stringValue()));
+        bindingSet.getBindingNames().forEach(bindingName -> {
+            if(bindingName.startsWith("location_")) {
+                location.mapper(bindingName, bindingSet.getValue(bindingName).stringValue());
+            } else if (bindingName.startsWith("owner_")) {
+                owner.mapper(bindingName, bindingSet.getValue(bindingName).stringValue());
+            } else if(bindingName.startsWith("creator_")) {
+                creator.mapper(bindingName, bindingSet.getValue(bindingName).stringValue());
+            } else post.mapper(bindingName, bindingSet.getValue(bindingName).stringValue());
+        });
+
         post.setLocation(location);
         post.setOwner(owner);
         post.setCreator(creator);
