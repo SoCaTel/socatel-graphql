@@ -135,7 +135,8 @@ public class PostRepository {
                     .where(buildPostGraphPattern(post, Optional.of(identifier)))
                     .where(buildLocationGraphPattern(post))
                     .where(buildOwnerGraphPattern(post))
-                    .where(buildCreatorGraphPattern(post));
+                    .where(buildCreatorGraphPattern(post))
+                    .groupBy(this.projectables.toArray(new Groupable[projectables.size()]));
 
             LOGGER.debug("Issuing SPARQL query :\n{}", selectQuery.getQueryString());
             TupleQuery tupleQuery = repositoryConnection.prepareTupleQuery(QueryLanguage.SPARQL, selectQuery.getQueryString());
