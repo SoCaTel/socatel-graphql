@@ -46,6 +46,8 @@ public class PostTupleQueryResultHandler implements TupleQueryResultHandler {
 
     @Override
     public void handleSolution(BindingSet bindingSet) throws TupleQueryResultHandlerException {
+        //TODO: find a SPARQL query solution to stop doing this check
+        if(!bindingSet.hasBinding("post")) return; // Quick fix
         Post post = new Post();
         Location location = new Location();
         Owner owner = new Owner();
@@ -71,4 +73,9 @@ public class PostTupleQueryResultHandler implements TupleQueryResultHandler {
     public List<Post> getPostList() {
         return this.postList;
     }
+
+    public Post getFirstPost() {
+        return this.postList.get(0);
+    }
+
 }

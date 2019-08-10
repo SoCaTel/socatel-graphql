@@ -1,6 +1,7 @@
 package com.ozwillo.socatelgraphql.repository;
 
 import com.ozwillo.socatelgraphql.domain.Post;
+import com.ozwillo.socatelgraphql.exception.PostNotFoundException;
 import com.ozwillo.socatelgraphql.handler.PostTupleQueryResultHandler;
 import org.eclipse.rdf4j.query.MalformedQueryException;
 import org.eclipse.rdf4j.query.QueryLanguage;
@@ -8,10 +9,8 @@ import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Aggregate;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions;
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Operand;
 import org.eclipse.rdf4j.sparqlbuilder.core.Groupable;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
 import org.eclipse.rdf4j.sparqlbuilder.core.Projectable;
@@ -127,7 +126,9 @@ public class PostRepository {
         return postList;
     }
 
-    public Optional<Post> getPost(String identifier) {
+    public Post getPost(String identifier) {
+        PostTupleQueryResultHandler postTupleQueryResultHandler = new PostTupleQueryResultHandler(repositoryConnection);
+
         try {
             Variable post = var("post");
 
@@ -136,23 +137,23 @@ public class PostRepository {
                     .where(buildLocationGraphPattern(post))
                     .where(buildOwnerGraphPattern(post))
                     .where(buildCreatorGraphPattern(post))
+                    .where(buildTopicGraphPattern(post))
                     .groupBy(this.projectables.toArray(new Groupable[projectables.size()]));
 
             LOGGER.debug("Issuing SPARQL query :\n{}", selectQuery.getQueryString());
             TupleQuery tupleQuery = repositoryConnection.prepareTupleQuery(QueryLanguage.SPARQL, selectQuery.getQueryString());
-
-            PostTupleQueryResultHandler postTupleQueryResultHandler = new PostTupleQueryResultHandler(repositoryConnection);
             tupleQuery.evaluate(postTupleQueryResultHandler);
-            return postTupleQueryResultHandler.getPostList().isEmpty() ?
-                    Optional.empty() :
-                    Optional.of(postTupleQueryResultHandler.getPostList().get(0));
         } catch (RepositoryException repositoryException) {
             LOGGER.error("An exception occurred on graphdb repository request {}", repositoryException.getMessage());
         } catch (MalformedQueryException malformedQueryException) {
             LOGGER.error("Something wrong in query {}", malformedQueryException.getMessage());
         }
 
-        return Optional.empty();
+        if(postTupleQueryResultHandler.getPostList().isEmpty()) {
+            throw new PostNotFoundException("The post was not found", identifier);
+        }
+
+        return postTupleQueryResultHandler.getFirstPost();
     }
 
     private GraphPattern buildPostGraphPattern(Variable post, Optional<String> identifier) {
