@@ -25,10 +25,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.var;
@@ -47,6 +44,7 @@ public class PostRepository {
     private static Prefix FOAF = prefix("foaf", iri("http://xmlns.com/foaf/0.1/"));
     private static Prefix SKOS = prefix("skos", iri("http://www.w3.org/2004/02/skos/core#"));
 
+    //TODO: singleton ??
     private RepositoryConnection repositoryConnection;
 
     private List<Projectable> projectables;
@@ -154,26 +152,30 @@ public class PostRepository {
         return Optional.empty();
     }
 
-    public List<Post> getPostsByTopics(String topics) {
+    public List<Post> findPostsByTopics(List<String> topics) {
         PostTupleQueryResultHandler postTupleQueryResultHandler = new PostTupleQueryResultHandler(repositoryConnection);
+
+        List<Projectable> basicProjectablesPost =
+                Arrays.asList(var("post"), var("identifier"), var("description"),
+                var("creationDate"), var("language"), var("num_likes"), var("num_replies"));
 
         Variable post = var("post");
 
         GraphPattern postGraphPattern = buildPostGraphPattern(post, Optional.empty());
 
         List<Expression> expressions = new ArrayList<>();
-        if (topics != null) {
-            expressions.add(Expressions.equals(var("prefLabel"), literalOf(topics)));
-        }
+        topics.forEach(topic -> expressions.add(Expressions.equals(var("prefLabel"), literalOf(topic))));
 
         if (!expressions.isEmpty()) {
-            postGraphPattern = postGraphPattern.filter(Expressions.and(expressions.toArray(new Expression[expressions.size()])));
+            postGraphPattern = postGraphPattern.filter(Expressions.or(expressions.toArray(new Expression[expressions.size()])));
         }
 
-        SelectQuery selectQuery = buildPostSelectQuery(this.projectables)
+        SelectQuery selectQuery = Queries.SELECT()
+                .prefix(SOCATEL, RDF, SIOC, SKOS)
+                .select(basicProjectablesPost.toArray(new Projectable[basicProjectablesPost.size()]))
                 .where(postGraphPattern)
                 .where(buildTopicGraphPattern(post))
-                .groupBy(this.projectables.toArray(new Groupable[projectables.size()]));
+                .groupBy(basicProjectablesPost.toArray(new Groupable[basicProjectablesPost.size()]));
 
         LOGGER.debug("Issuing SPARQL query :\n{}", selectQuery.getQueryString());
         try {
