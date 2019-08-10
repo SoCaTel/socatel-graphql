@@ -154,8 +154,41 @@ public class PostRepository {
         return Optional.empty();
     }
 
-    public ArrayList<Post> getPostsByTopics(String topics) {
-        return new ArrayList<>();
+    public List<Post> getPostsByTopics(String topics) {
+        PostTupleQueryResultHandler postTupleQueryResultHandler = new PostTupleQueryResultHandler(repositoryConnection);
+
+        Variable post = var("post");
+
+        GraphPattern postGraphPattern = buildPostGraphPattern(post, Optional.empty());
+
+        List<Expression> expressions = new ArrayList<>();
+        if (topics != null) {
+            expressions.add(Expressions.equals(var("prefLabel"), literalOf(topics)));
+        }
+
+        if (!expressions.isEmpty()) {
+            postGraphPattern = postGraphPattern.filter(Expressions.and(expressions.toArray(new Expression[expressions.size()])));
+        }
+
+        SelectQuery selectQuery = buildPostSelectQuery(this.projectables)
+                .where(postGraphPattern)
+                .where(buildTopicGraphPattern(post))
+                .groupBy(this.projectables.toArray(new Groupable[projectables.size()]));
+
+        LOGGER.debug("Issuing SPARQL query :\n{}", selectQuery.getQueryString());
+        try {
+            TupleQuery tupleQuery = repositoryConnection.prepareTupleQuery(QueryLanguage.SPARQL, selectQuery.getQueryString());
+
+            tupleQuery.evaluate(postTupleQueryResultHandler);
+
+            postTupleQueryResultHandler.endQueryResult();
+        } catch (RepositoryException repositoryException) {
+            LOGGER.error("An exception occurred on graphdb repository request {}", repositoryException.getMessage());
+        } catch (MalformedQueryException malformedQueryException) {
+            LOGGER.error("Something wrong in query {}", malformedQueryException.getMessage());
+        }
+
+        return postTupleQueryResultHandler.getPostList();
     }
 
     private GraphPattern buildPostGraphPattern(Variable post, Optional<String> identifier) {
