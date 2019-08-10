@@ -28,4 +28,9 @@ public class PostDataFetchers {
                         dataFetchingEnvironment.getArgument("offset"),
                         dataFetchingEnvironment.getArgument("limit"));
     }
+
+    public DataFetcher getPostsByTopicsDataFetcher() {
+        return dataFetchingEnvironment ->
+                postRepository.getPostsByTopics(dataFetchingEnvironment.getArgument("topics"));
+    }
 }

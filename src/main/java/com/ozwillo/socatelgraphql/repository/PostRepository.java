@@ -154,6 +154,10 @@ public class PostRepository {
         return Optional.empty();
     }
 
+    public ArrayList<Post> getPostsByTopics(String topics) {
+        return new ArrayList<>();
+    }
+
     private GraphPattern buildPostGraphPattern(Variable post, Optional<String> identifier) {
         TriplePattern triplePattern = post.isA((SOCATEL.iri("Post")));
         identifier.ifPresent(s -> triplePattern.andHas(SOCATEL.iri("identifier"), s));
