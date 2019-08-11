@@ -1,7 +1,6 @@
 package com.ozwillo.socatelgraphql.repository;
 
 import com.ozwillo.socatelgraphql.domain.Post;
-import com.ozwillo.socatelgraphql.exception.PostNotFoundException;
 import com.ozwillo.socatelgraphql.handler.PostTupleQueryResultHandler;
 import org.eclipse.rdf4j.query.MalformedQueryException;
 import org.eclipse.rdf4j.query.QueryLanguage;
@@ -126,8 +125,7 @@ public class PostRepository {
         return postList;
     }
 
-    public Post getPost(String identifier) {
-        PostTupleQueryResultHandler postTupleQueryResultHandler = new PostTupleQueryResultHandler(repositoryConnection);
+    public Optional<Post> getPost(String identifier) {
 
         try {
             Variable post = var("post");
@@ -142,18 +140,18 @@ public class PostRepository {
 
             LOGGER.debug("Issuing SPARQL query :\n{}", selectQuery.getQueryString());
             TupleQuery tupleQuery = repositoryConnection.prepareTupleQuery(QueryLanguage.SPARQL, selectQuery.getQueryString());
+            PostTupleQueryResultHandler postTupleQueryResultHandler = new PostTupleQueryResultHandler(repositoryConnection);
             tupleQuery.evaluate(postTupleQueryResultHandler);
+            return postTupleQueryResultHandler.getPostList().isEmpty() ?
+                    Optional.empty() :
+                    Optional.of(postTupleQueryResultHandler.getPostList().get(0));
         } catch (RepositoryException repositoryException) {
             LOGGER.error("An exception occurred on graphdb repository request {}", repositoryException.getMessage());
         } catch (MalformedQueryException malformedQueryException) {
             LOGGER.error("Something wrong in query {}", malformedQueryException.getMessage());
         }
 
-        if(postTupleQueryResultHandler.getPostList().isEmpty()) {
-            throw new PostNotFoundException("The post was not found", identifier);
-        }
-
-        return postTupleQueryResultHandler.getFirstPost();
+        return Optional.empty();
     }
 
     private GraphPattern buildPostGraphPattern(Variable post, Optional<String> identifier) {
