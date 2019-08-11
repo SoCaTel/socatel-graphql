@@ -6,16 +6,11 @@ import com.ozwillo.socatelgraphql.domain.Owner;
 import com.ozwillo.socatelgraphql.domain.Post;
 import org.eclipse.rdf4j.query.*;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.time.ZonedDateTime;
 import java.util.*;
 
 
 public class PostTupleQueryResultHandler implements TupleQueryResultHandler {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(PostTupleQueryResultHandler.class);
 
     private RepositoryConnection repositoryConnection;
 
@@ -46,6 +41,8 @@ public class PostTupleQueryResultHandler implements TupleQueryResultHandler {
 
     @Override
     public void handleSolution(BindingSet bindingSet) throws TupleQueryResultHandlerException {
+        //TODO: find a SPARQL query solution to stop doing this check
+        if(!bindingSet.hasBinding("post")) return; // Quick fix
         Post post = new Post();
         Location location = new Location();
         Owner owner = new Owner();

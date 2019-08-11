@@ -8,10 +8,8 @@ import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Aggregate;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions;
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Operand;
 import org.eclipse.rdf4j.sparqlbuilder.core.Groupable;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
 import org.eclipse.rdf4j.sparqlbuilder.core.Projectable;
@@ -128,6 +126,7 @@ public class PostRepository {
     }
 
     public Optional<Post> getPost(String identifier) {
+
         try {
             Variable post = var("post");
 
@@ -136,11 +135,11 @@ public class PostRepository {
                     .where(buildLocationGraphPattern(post))
                     .where(buildOwnerGraphPattern(post))
                     .where(buildCreatorGraphPattern(post))
+                    .where(buildTopicGraphPattern(post))
                     .groupBy(this.projectables.toArray(new Groupable[projectables.size()]));
 
             LOGGER.debug("Issuing SPARQL query :\n{}", selectQuery.getQueryString());
             TupleQuery tupleQuery = repositoryConnection.prepareTupleQuery(QueryLanguage.SPARQL, selectQuery.getQueryString());
-
             PostTupleQueryResultHandler postTupleQueryResultHandler = new PostTupleQueryResultHandler(repositoryConnection);
             tupleQuery.evaluate(postTupleQueryResultHandler);
             return postTupleQueryResultHandler.getPostList().isEmpty() ?
