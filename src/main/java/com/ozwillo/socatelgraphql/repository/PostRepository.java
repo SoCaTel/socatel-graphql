@@ -27,8 +27,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
-import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.var;
+import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.*;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.*;
 
 @Component
@@ -164,7 +163,7 @@ public class PostRepository {
         GraphPattern postGraphPattern = buildPostGraphPattern(post, Optional.empty());
 
         List<Expression> expressions = new ArrayList<>();
-        topics.forEach(topic -> expressions.add(Expressions.equals(var("prefLabel"), literalOf(topic))));
+        topics.forEach(topic -> expressions.add(Expressions.equals(Expressions.str(var("prefLabel")), literalOf(topic))));
 
         if (!expressions.isEmpty()) {
             postGraphPattern = postGraphPattern.filter(Expressions.or(expressions.toArray(new Expression[expressions.size()])));
@@ -245,6 +244,6 @@ public class PostRepository {
         Variable topic = var("topic");
 
         return post.has(SOCATEL.iri("topic"), var("topic"))
-                .and(topic.has(SKOS.iri("prefLabel"), var("prefLabel"))).optional();
+                .and(topic.has(SKOS.iri("prefLabel | skos:altLabel"), var("prefLabel"))).optional();
     }
 }
