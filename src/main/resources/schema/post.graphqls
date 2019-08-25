@@ -4,7 +4,7 @@ scalar DateTime
 type Query {
     postById(identifier: ID!): Post
     posts(creationDateFrom: Date, creationDateTo: Date, screenName: String, offset: Int = 0, limit: Int = 100): [Post!]!
-    postsByTopics(topics: [String!]!): [Post!]!
+    postsByTopics(topics: [String!]!, offset: Int = 0, limit: Int = 100): [Post!]!
 }
 
 type Post {

@@ -151,7 +151,7 @@ public class PostRepository {
         return Optional.empty();
     }
 
-    public List<Post> findPostsByTopics(List<String> topics) {
+    public List<Post> findPostsByTopics(List<String> topics, Integer offset, Integer limit) {
         PostTupleQueryResultHandler postTupleQueryResultHandler = new PostTupleQueryResultHandler(repositoryConnection);
 
         List<Projectable> basicProjectablesPost =
@@ -174,7 +174,9 @@ public class PostRepository {
                 .select(basicProjectablesPost.toArray(new Projectable[basicProjectablesPost.size()]))
                 .where(postGraphPattern)
                 .where(buildTopicGraphPattern(post))
-                .groupBy(basicProjectablesPost.toArray(new Groupable[basicProjectablesPost.size()]));
+                .groupBy(basicProjectablesPost.toArray(new Groupable[basicProjectablesPost.size()]))
+                .offset(offset)
+                .limit(limit);
 
         LOGGER.debug("Issuing SPARQL query :\n{}", selectQuery.getQueryString());
         try {
