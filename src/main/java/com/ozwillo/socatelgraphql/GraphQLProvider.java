@@ -8,26 +8,35 @@ import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.io.support.ResourcePatternUtils;
 import org.springframework.stereotype.Component;
-import org.springframework.util.FileCopyUtils;
 
 import javax.annotation.PostConstruct;
+import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 import static graphql.schema.idl.TypeRuntimeWiring.newTypeWiring;
 
 @Component
 public class GraphQLProvider {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GraphQLProvider.class);
 
     private GraphQL graphQL;
 
     private final PostDataFetchers postDataFetchers;
 
-    public GraphQLProvider(PostDataFetchers postDataFetchers) {
+    private final ResourceLoader resourceLoader;
+
+    public GraphQLProvider(PostDataFetchers postDataFetchers, ResourceLoader resourceLoader) {
         this.postDataFetchers = postDataFetchers;
+        this.resourceLoader = resourceLoader;
     }
 
     @Bean
@@ -36,17 +45,20 @@ public class GraphQLProvider {
     }
 
     @PostConstruct
-    public void init() throws IOException {
-        ClassPathResource schemaResource = new ClassPathResource("schema/post.graphqls");
-        byte[] sdl = FileCopyUtils.copyToByteArray(schemaResource.getInputStream());
-        GraphQLSchema graphQLSchema = buildSchema(new String(sdl, StandardCharsets.UTF_8));
+    public void init() {
+        GraphQLSchema graphQLSchema = buildSchema();
         this.graphQL = GraphQL.newGraphQL(graphQLSchema).build();
     }
 
-    private GraphQLSchema buildSchema(String sdl) {
-        TypeDefinitionRegistry typeRegistry = new SchemaParser().parse(sdl);
-        RuntimeWiring runtimeWiring = buildWiring();
+    private GraphQLSchema buildSchema() {
+        SchemaParser schemaParser = new SchemaParser();
+        TypeDefinitionRegistry typeRegistry = new TypeDefinitionRegistry();
         SchemaGenerator schemaGenerator = new SchemaGenerator();
+
+        loadSchemas().forEach(schema -> typeRegistry.merge(schemaParser.parse(schema)));
+
+        RuntimeWiring runtimeWiring = buildWiring();
+
         return schemaGenerator.makeExecutableSchema(typeRegistry, runtimeWiring);
     }
 
@@ -59,5 +71,24 @@ public class GraphQLProvider {
                 .scalar(ExtendedScalars.Date)
                 .scalar(ExtendedScalars.DateTime)
                 .build();
+    }
+
+    private List<File> loadSchemas() {
+        List<File> files = new ArrayList<>();
+        Resource[] resources;
+
+        try {
+            resources = ResourcePatternUtils
+                    .getResourcePatternResolver(resourceLoader)
+                    .getResources("classpath:schema/*.graphqls");
+
+            for (Resource resource : resources) {
+                files.add(resource.getFile());
+            }
+        } catch (IOException e) {
+            LOGGER.error("An error occurred while loading GraphQL schemas : {}", e.getMessage());
+        }
+
+        return files;
     }
 }

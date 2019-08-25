@@ -1,0 +1,10 @@
+extend type Query {
+    searchByTopics(topics: [String!]!): [Data!]!
+}
+
+type Data {
+    identifier: ID!
+    name: String
+    webLink: String!
+    type: String!
+}
