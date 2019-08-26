@@ -25,13 +25,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
-import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
-import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.var;
+import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.*;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.*;
 
 @Component
@@ -47,6 +43,7 @@ public class PostRepository {
     private static Prefix FOAF = prefix("foaf", iri("http://xmlns.com/foaf/0.1/"));
     private static Prefix SKOS = prefix("skos", iri("http://www.w3.org/2004/02/skos/core#"));
 
+    //TODO: singleton ??
     private RepositoryConnection repositoryConnection;
 
     private List<Projectable> projectables;
@@ -154,6 +151,49 @@ public class PostRepository {
         return Optional.empty();
     }
 
+    public List<Post> findPostsByTopics(List<String> topics, Integer offset, Integer limit) {
+        PostTupleQueryResultHandler postTupleQueryResultHandler = new PostTupleQueryResultHandler(repositoryConnection);
+
+        List<Projectable> basicProjectablesPost =
+                Arrays.asList(var("post"), var("identifier"), var("description"),
+                var("creationDate"), var("language"), var("num_likes"), var("num_replies"));
+
+        Variable post = var("post");
+
+        GraphPattern postGraphPattern = buildPostGraphPattern(post, Optional.empty());
+
+        List<Expression> expressions = new ArrayList<>();
+        topics.forEach(topic -> expressions.add(Expressions.equals(Expressions.str(var("prefLabel")), literalOf(topic))));
+
+        if (!expressions.isEmpty()) {
+            postGraphPattern = postGraphPattern.filter(Expressions.or(expressions.toArray(new Expression[expressions.size()])));
+        }
+
+        SelectQuery selectQuery = Queries.SELECT()
+                .prefix(SOCATEL, RDF, SIOC, SKOS)
+                .select(basicProjectablesPost.toArray(new Projectable[basicProjectablesPost.size()]))
+                .where(postGraphPattern)
+                .where(buildTopicGraphPattern(post))
+                .groupBy(basicProjectablesPost.toArray(new Groupable[basicProjectablesPost.size()]))
+                .offset(offset)
+                .limit(limit);
+
+        LOGGER.debug("Issuing SPARQL query :\n{}", selectQuery.getQueryString());
+        try {
+            TupleQuery tupleQuery = repositoryConnection.prepareTupleQuery(QueryLanguage.SPARQL, selectQuery.getQueryString());
+
+            tupleQuery.evaluate(postTupleQueryResultHandler);
+
+            postTupleQueryResultHandler.endQueryResult();
+        } catch (RepositoryException repositoryException) {
+            LOGGER.error("An exception occurred on graphdb repository request {}", repositoryException.getMessage());
+        } catch (MalformedQueryException malformedQueryException) {
+            LOGGER.error("Something wrong in query {}", malformedQueryException.getMessage());
+        }
+
+        return postTupleQueryResultHandler.getPostList();
+    }
+
     private GraphPattern buildPostGraphPattern(Variable post, Optional<String> identifier) {
         TriplePattern triplePattern = post.isA((SOCATEL.iri("Post")));
         identifier.ifPresent(s -> triplePattern.andHas(SOCATEL.iri("identifier"), s));
@@ -206,6 +246,6 @@ public class PostRepository {
         Variable topic = var("topic");
 
         return post.has(SOCATEL.iri("topic"), var("topic"))
-                .and(topic.has(SKOS.iri("prefLabel"), var("prefLabel"))).optional();
+                .and(topic.has(SKOS.iri("prefLabel | skos:altLabel"), var("prefLabel"))).optional();
     }
 }

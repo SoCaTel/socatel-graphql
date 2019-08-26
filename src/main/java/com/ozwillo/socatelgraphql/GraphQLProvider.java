@@ -54,7 +54,8 @@ public class GraphQLProvider {
         return RuntimeWiring.newRuntimeWiring()
                 .type(newTypeWiring("Query")
                         .dataFetcher("postById", postDataFetchers.getPostByIdDataFetcher())
-                        .dataFetcher("posts", postDataFetchers.getPostsDataFetcher()))
+                        .dataFetcher("posts", postDataFetchers.getPostsDataFetcher())
+                        .dataFetcher("postsByTopics", postDataFetchers.getPostsByTopicsDataFetcher()))
                 .scalar(ExtendedScalars.Date)
                 .scalar(ExtendedScalars.DateTime)
                 .build();
