@@ -1,5 +1,6 @@
 package com.ozwillo.socatelgraphql;
 
+import com.ozwillo.socatelgraphql.fetcher.GenericDataFetchers;
 import com.ozwillo.socatelgraphql.fetcher.PostDataFetchers;
 import graphql.GraphQL;
 import graphql.scalars.ExtendedScalars;
@@ -31,11 +32,12 @@ public class GraphQLProvider {
     private GraphQL graphQL;
 
     private final PostDataFetchers postDataFetchers;
-
+    private final GenericDataFetchers genericDataFetchers;
     private final ResourceLoader resourceLoader;
 
-    public GraphQLProvider(PostDataFetchers postDataFetchers, ResourceLoader resourceLoader) {
+    public GraphQLProvider(PostDataFetchers postDataFetchers, GenericDataFetchers genericDataFetchers, ResourceLoader resourceLoader) {
         this.postDataFetchers = postDataFetchers;
+        this.genericDataFetchers = genericDataFetchers;
         this.resourceLoader = resourceLoader;
     }
 
@@ -67,7 +69,8 @@ public class GraphQLProvider {
                 .type(newTypeWiring("Query")
                         .dataFetcher("postById", postDataFetchers.getPostByIdDataFetcher())
                         .dataFetcher("posts", postDataFetchers.getPostsDataFetcher())
-                        .dataFetcher("postsByTopics", postDataFetchers.getPostsByTopicsDataFetcher()))
+                        .dataFetcher("postsByTopics", postDataFetchers.getPostsByTopicsDataFetcher())
+                        .dataFetcher("searchByTopics", genericDataFetchers.searchByTopicsDataFetcher()))
                 .scalar(ExtendedScalars.Date)
                 .scalar(ExtendedScalars.DateTime)
                 .build();
