@@ -16,10 +16,13 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourcePatternUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.util.FileCopyUtils;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,7 +60,14 @@ public class GraphQLProvider {
         TypeDefinitionRegistry typeRegistry = new TypeDefinitionRegistry();
         SchemaGenerator schemaGenerator = new SchemaGenerator();
 
-        loadSchemas().forEach(schema -> typeRegistry.merge(schemaParser.parse(schema)));
+        loadSchemas().forEach(inputStream -> {
+            try {
+                byte[] sdl = FileCopyUtils.copyToByteArray(inputStream);
+                typeRegistry.merge(schemaParser.parse(new String(sdl, StandardCharsets.UTF_8)));
+            } catch (IOException e) {
+                LOGGER.error("An error occured while trying to build GraphQL Schema {}", e.getMessage());
+            }
+        });
 
         RuntimeWiring runtimeWiring = buildWiring();
 
@@ -76,8 +86,8 @@ public class GraphQLProvider {
                 .build();
     }
 
-    private List<File> loadSchemas() {
-        List<File> files = new ArrayList<>();
+    private List<InputStream> loadSchemas() {
+        List<InputStream> inputStreams = new ArrayList<>();
         Resource[] resources;
 
         try {
@@ -86,12 +96,12 @@ public class GraphQLProvider {
                     .getResources("classpath:schema/*.graphqls");
 
             for (Resource resource : resources) {
-                files.add(resource.getFile());
+                inputStreams.add(resource.getInputStream());
             }
         } catch (IOException e) {
             LOGGER.error("An error occurred while loading GraphQL schemas : {}", e.getMessage());
         }
 
-        return files;
+        return inputStreams;
     }
 }
