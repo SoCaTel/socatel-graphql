@@ -163,7 +163,11 @@ public class PostRepository {
         GraphPattern postGraphPattern = buildPostGraphPattern(post, Optional.empty());
 
         List<Expression> expressions = new ArrayList<>();
-        topics.forEach(topic -> expressions.add(Expressions.equals(Expressions.str(var("prefLabel")), literalOf(topic))));
+        topics.forEach(topic ->
+                expressions.add(
+                        Expressions.or(
+                                Expressions.regex(Expressions.str(var("label")), literalOf(topic), literalOf("i")),
+                                Expressions.regex(Expressions.str(var("matchedLabel")), literalOf(topic), literalOf("i")))));
 
         if (!expressions.isEmpty()) {
             postGraphPattern = postGraphPattern.filter(Expressions.or(expressions.toArray(new Expression[expressions.size()])));
@@ -244,8 +248,11 @@ public class PostRepository {
 
     private GraphPattern buildTopicGraphPattern(Variable post) {
         Variable topic = var("topic");
+        Variable matchedTopic = var("matchedTopic");
 
         return post.has(SOCATEL.iri("topic"), var("topic"))
-                .and(topic.has(SKOS.iri("prefLabel | skos:altLabel"), var("prefLabel"))).optional();
+            .and(topic.has(SKOS.iri("closeMatch*"), matchedTopic))
+            .and(topic.has(SKOS.iri("prefLabel | skos:altLabel"), var("label")))
+            .and(matchedTopic.has(SKOS.iri("prefLabel | skos:altLabel"), var("matchedLabel"))).optional();
     }
 }
