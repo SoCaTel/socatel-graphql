@@ -9,7 +9,6 @@ import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions;
-import org.eclipse.rdf4j.sparqlbuilder.constraint.Operand;
 import org.eclipse.rdf4j.sparqlbuilder.core.Groupable;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
 import org.eclipse.rdf4j.sparqlbuilder.core.Projectable;
@@ -26,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.var;
@@ -69,11 +69,16 @@ public class GenericRepository {
                 .and(matchedTopic.has(SKOS.iri("prefLabel | skos:altLabel"), var("matchedLabel")));
 
         List<Expression> expressions = new ArrayList<>();
-        topics.forEach(topic ->
-                expressions.add(
-                        Expressions.or(
-                                Expressions.regex(Expressions.str(var("label")), literalOf(topic), literalOf("i")),
-                                Expressions.regex(Expressions.str(var("matchedLabel")), literalOf(topic), literalOf("i")))));
+
+        topics = topics.stream().filter(topic -> !topic.isEmpty()).collect(Collectors.toList());
+
+        if(!topics.isEmpty()) {
+            String topicsRegex = String.join("|", topics);
+            expressions.add(
+                    Expressions.or(
+                            Expressions.regex(Expressions.str(var("label")), literalOf(topicsRegex), literalOf("i")),
+                            Expressions.regex(Expressions.str(var("matchedLabel")), literalOf(topicsRegex), literalOf("i"))));
+        }
 
         if (!expressions.isEmpty()) {
             graphPattern = graphPattern.filter(Expressions.or(expressions.toArray(new Expression[expressions.size()])));

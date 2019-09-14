@@ -26,6 +26,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.*;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.*;
@@ -163,11 +164,16 @@ public class PostRepository {
         GraphPattern postGraphPattern = buildPostGraphPattern(post, Optional.empty());
 
         List<Expression> expressions = new ArrayList<>();
-        topics.forEach(topic ->
-                expressions.add(
-                        Expressions.or(
-                                Expressions.regex(Expressions.str(var("label")), literalOf(topic), literalOf("i")),
-                                Expressions.regex(Expressions.str(var("matchedLabel")), literalOf(topic), literalOf("i")))));
+
+        topics = topics.stream().filter(topic -> !topic.isEmpty()).collect(Collectors.toList());
+
+        if(!topics.isEmpty()) {
+            String topicsRegex = String.join("|", topics);
+            expressions.add(
+                    Expressions.or(
+                            Expressions.regex(Expressions.str(var("label")), literalOf(topicsRegex), literalOf("i")),
+                            Expressions.regex(Expressions.str(var("matchedLabel")), literalOf(topicsRegex), literalOf("i"))));
+        }
 
         if (!expressions.isEmpty()) {
             postGraphPattern = postGraphPattern.filter(Expressions.or(expressions.toArray(new Expression[expressions.size()])));
