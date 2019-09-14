@@ -9,6 +9,7 @@ import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.http.HTTPRepository;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions;
+import org.eclipse.rdf4j.sparqlbuilder.constraint.Operand;
 import org.eclipse.rdf4j.sparqlbuilder.core.Groupable;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
 import org.eclipse.rdf4j.sparqlbuilder.core.Projectable;
@@ -71,8 +72,8 @@ public class GenericRepository {
         topics.forEach(topic ->
                 expressions.add(
                         Expressions.or(
-                                Expressions.equals(Expressions.str(var("label")), literalOf(topic)),
-                                Expressions.equals(Expressions.str(var("matchedLabel")), literalOf(topic)))));
+                                Expressions.regex(Expressions.str(var("label")), literalOf(topic), literalOf("i")),
+                                Expressions.regex(Expressions.str(var("matchedLabel")), literalOf(topic), literalOf("i")))));
 
         if (!expressions.isEmpty()) {
             graphPattern = graphPattern.filter(Expressions.or(expressions.toArray(new Expression[expressions.size()])));
