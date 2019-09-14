@@ -1,5 +1,5 @@
 extend type Query {
-    searchByTopics(topics: [String!]!): [Data!]!
+    searchByTopics(topics: [String!]!, language: String): [Data!]!
 }
 
 type Data {

@@ -15,6 +15,8 @@ public class GenericDataFetchers {
 
     public DataFetcher searchByTopicsDataFetcher() {
         return dataFetchingEnvironment ->
-                genericRepository.searchByTopics(dataFetchingEnvironment.getArgument("topics"));
+                genericRepository.searchByTopics(
+                        dataFetchingEnvironment.getArgument("topics"),
+                        dataFetchingEnvironment.getArgument("language"));
     }
 }

@@ -72,7 +72,7 @@ public class PostRepository {
 
         Variable post = var("post");
 
-        GraphPattern postGraphPattern = buildPostGraphPattern(post, Optional.empty());
+        GraphPattern postGraphPattern = buildPostGraphPattern(post, Optional.empty(), "");
 
         List<Expression> expressions = new ArrayList<>();
         if (creationDateFrom != null) {
@@ -129,7 +129,7 @@ public class PostRepository {
             Variable post = var("post");
 
             SelectQuery selectQuery = buildPostSelectQuery(this.projectables)
-                    .where(buildPostGraphPattern(post, Optional.of(identifier)))
+                    .where(buildPostGraphPattern(post, Optional.of(identifier), ""))
                     .where(buildLocationGraphPattern(post))
                     .where(buildOwnerGraphPattern(post))
                     .where(buildCreatorGraphPattern(post))
@@ -152,7 +152,7 @@ public class PostRepository {
         return Optional.empty();
     }
 
-    public List<Post> findPostsByTopics(List<String> topics, Integer offset, Integer limit) {
+    public List<Post> findPostsByTopics(List<String> topics, String language, Integer offset, Integer limit) {
         PostTupleQueryResultHandler postTupleQueryResultHandler = new PostTupleQueryResultHandler(repositoryConnection);
 
         List<Projectable> basicProjectablesPost =
@@ -161,7 +161,7 @@ public class PostRepository {
 
         Variable post = var("post");
 
-        GraphPattern postGraphPattern = buildPostGraphPattern(post, Optional.empty());
+        GraphPattern postGraphPattern = buildPostGraphPattern(post, Optional.empty(), language);
 
         List<Expression> expressions = new ArrayList<>();
 
@@ -204,13 +204,13 @@ public class PostRepository {
         return postTupleQueryResultHandler.getPostList();
     }
 
-    private GraphPattern buildPostGraphPattern(Variable post, Optional<String> identifier) {
+    private GraphPattern buildPostGraphPattern(Variable post, Optional<String> identifier, String language) {
         TriplePattern triplePattern = post.isA((SOCATEL.iri("Post")));
         identifier.ifPresent(s -> triplePattern.andHas(SOCATEL.iri("identifier"), s));
         triplePattern.andHas(SOCATEL.iri("identifier"), var("identifier"))
                 .andHas(SOCATEL.iri("description"), var("description"))
                 .andHas(SOCATEL.iri("creationDate"), var("creationDate"))
-                .andHas(SOCATEL.iri("language"), var("language"))
+                .andHas(SOCATEL.iri("language"), language.isEmpty() || language.length() > 2 ? var("language") : literalOf(language))
                 .andHas(SOCATEL.iri("num_likes"), var("num_likes"))
                 .andHas(SIOC.iri("num_replies"), var("num_replies"));
 
