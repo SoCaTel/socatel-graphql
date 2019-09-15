@@ -50,7 +50,7 @@ public class GenericRepository {
         this.repositoryConnection = repository.getConnection();
     }
 
-    public List<HashMap<String, String>> searchByTopics(List<String> topics) {
+    public List<HashMap<String, String>> searchByTopics(List<String> topics, String language) {
         GenericDataTupleQueryResultHandler genericDataTupleQueryResultHandler = new GenericDataTupleQueryResultHandler(repositoryConnection);
 
         List<Projectable> basicProjectablesPost =
@@ -63,6 +63,7 @@ public class GenericRepository {
         GraphPattern graphPattern = data.isA(var("type"))
                 .andHas(SOCATEL.iri("identifier"), var("identifier"))
                 .andHas(SOCATEL.iri("webLink"), var("webLink"))
+                .andHas(SOCATEL.iri("language"), language.isEmpty() || language.length() > 2 ? var("language") : literalOf(language))
                 .andHas(SOCATEL.iri("topic"), topicVar)
                 .and(topicVar.has(SKOS.iri("closeMatch*"), matchedTopic))
                 .and(topicVar.has(SKOS.iri("prefLabel | skos:altLabel"), var("label")))
