@@ -4,8 +4,10 @@ graphdb:
   password: root
 
 es:
-  indices:
-    organizations: so_organisation
+  portal:
+    organizations:
+      index: so_organisation
+      name_field: organisation_name
 
 management:
   endpoints:

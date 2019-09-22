@@ -23,8 +23,11 @@ public class ServiceRepository {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ServiceRepository.class);
 
-    @Value("${es.indices.organizations}")
-    private String organizationsIndices;
+    @Value("${es.portal.organizations.index}")
+    private String organizationsIndex;
+
+    @Value("${es.portal.organizations.name_field}")
+    private String organizationsNameField;
 
     private final JestProperties jestProperties;
 
@@ -44,10 +47,10 @@ public class ServiceRepository {
         JestClient client = factory.getObject();
 
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-        searchSourceBuilder.query(QueryBuilders.matchQuery("organisation_name", name));
+        searchSourceBuilder.query(QueryBuilders.matchQuery(organizationsNameField, name));
 
         Search search = new Search.Builder(searchSourceBuilder.toString())
-                .addIndex(organizationsIndices)
+                .addIndex(organizationsIndex)
                 .build();
 
         SearchResult result;
@@ -60,9 +63,6 @@ public class ServiceRepository {
 
         LOGGER.debug(result.getJsonString());
         List<Service> services = result.getSourceAsObjectList(Service.class, false);
-        if (!services.isEmpty())
-            return Optional.of(result.getSourceAsObjectList(Service.class, false).get(0));
-        else
-            return Optional.empty();
+        return services.isEmpty() ? Optional.empty() : Optional.of(services.get(0));
     }
 }
