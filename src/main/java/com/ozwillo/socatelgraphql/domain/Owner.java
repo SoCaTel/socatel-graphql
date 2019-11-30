@@ -14,6 +14,8 @@ public class Owner {
 
     private Integer numLikes;
 
+    private String imageLink;
+
     public Owner() {
     }
 
@@ -84,6 +86,9 @@ public class Owner {
                 break;
             case "owner_numLikes":
                 numLikes = Integer.valueOf(value);
+                break;
+            case "owner_imageLink":
+                imageLink = value;
                 break;
         }
     }

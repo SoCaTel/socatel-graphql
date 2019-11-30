@@ -63,7 +63,7 @@ public class PostRepository {
                 var("num_replies"), var("location_name"), var("location_alternateName"),
                 var("location_countryCode"), var("owner_identifier"), var("owner_title"),
                 var("owner_description"), var("owner_webLink"), var("owner_language"),
-                var("owner_num_likes"), var("creator_name"), var("creator_username")));
+                var("owner_num_likes"), var("owner_imageLink"), var("creator_name"), var("creator_username")));
     }
 
     public ArrayList<Post> getPosts(LocalDate creationDateFrom, LocalDate creationDateTo, String screenName, Integer offset, Integer limit) {
@@ -100,7 +100,6 @@ public class PostRepository {
                 .where(buildOwnerGraphPattern(post))
                 .where(buildCreatorGraphPattern(post))
                 .where(buildTopicGraphPattern(post))
-                .groupBy(this.projectables.toArray(new Groupable[projectables.size()]))
                 .offset(offset)
                 .limit(limit);
 
@@ -133,8 +132,7 @@ public class PostRepository {
                     .where(buildLocationGraphPattern(post))
                     .where(buildOwnerGraphPattern(post))
                     .where(buildCreatorGraphPattern(post))
-                    .where(buildTopicGraphPattern(post))
-                    .groupBy(this.projectables.toArray(new Groupable[projectables.size()]));
+                    .where(buildTopicGraphPattern(post));
 
             LOGGER.debug("Issuing SPARQL query :\n{}", selectQuery.getQueryString());
             TupleQuery tupleQuery = repositoryConnection.prepareTupleQuery(QueryLanguage.SPARQL, selectQuery.getQueryString());
@@ -183,7 +181,7 @@ public class PostRepository {
                 .prefix(SOCATEL, RDF, SIOC, SKOS)
                 .select(basicProjectablesPost.toArray(new Projectable[basicProjectablesPost.size()]))
                 .where(postGraphPattern)
-                .where(buildTopicGraphPattern(post))
+                .where(buildTopicCloseMatchGraphPattern(post))
                 .groupBy(basicProjectablesPost.toArray(new Groupable[basicProjectablesPost.size()]))
                 .offset(offset)
                 .limit(limit);
@@ -232,8 +230,9 @@ public class PostRepository {
                         .andHas(SOCATEL.iri("title"), var("owner_title"))
                         .andHas(SOCATEL.iri("description"), var("owner_description"))
                         .andHas(SOCATEL.iri("webLink"), var("owner_webLink"))
-                        .andHas(SOCATEL.iri("language"), var("owner_language"))
-                        .andHas(SOCATEL.iri("num_likes"), var("owner_num_likes"))).optional();
+                        .andHas(SOCATEL.iri("num_likes"), var("owner_num_likes"))
+                        .and(owner.has(SOCATEL.iri("imageLink"), var("owner_imageLink")).optional())
+                        .and(owner.has(SOCATEL.iri("language"), var("owner_language")).optional())).optional();
     }
 
     private GraphPattern buildCreatorGraphPattern(Variable post) {
@@ -245,7 +244,8 @@ public class PostRepository {
 
     private SelectQuery buildPostSelectQuery(List<Projectable> projectables) {
         List<Projectable> grouConcatProjectable = new ArrayList<>(projectables);
-        grouConcatProjectable.add(Expressions.group_concat("\",\"", var("prefLabel")).distinct().as(var("topics")));
+        //Quick fix to optimise requests
+        //grouConcatProjectable.add(Expressions.group_concat("\",\"", var("prefLabel")).distinct().as(var("topics")));
 
         return Queries.SELECT()
                 .prefix(SOCATEL, RDF, SIOC, GN, FOAF, SKOS)
@@ -254,10 +254,17 @@ public class PostRepository {
 
     private GraphPattern buildTopicGraphPattern(Variable post) {
         Variable topic = var("topic");
+
+        return post.has(SOCATEL.iri("topic"), var("topic"))
+            .and(topic.has(SKOS.iri("prefLabel"), var("prefLabel"))).optional();
+    }
+
+    private GraphPattern buildTopicCloseMatchGraphPattern(Variable post) {
+        Variable topic = var("topic");
         Variable matchedTopic = var("matchedTopic");
 
         return post.has(SOCATEL.iri("topic"), var("topic"))
-            .and(topic.has(SKOS.iri("closeMatch*"), matchedTopic))
+            .and(topic.has(SKOS.iri("closeMatch"), matchedTopic))
             .and(topic.has(SKOS.iri("prefLabel | skos:altLabel"), var("label")))
             .and(matchedTopic.has(SKOS.iri("prefLabel | skos:altLabel"), var("matchedLabel"))).optional();
     }
