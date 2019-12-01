@@ -100,6 +100,32 @@ public class ServiceRepository {
         return serviceList;
     }
 
+    public Optional<Service> getService(String identifier) {
+
+        try {
+            Variable service = var("service");
+
+            SelectQuery selectQuery = buildPostSelectQuery(this.projectables)
+                    .where(buildServiceGraphPattern(service, Optional.of(identifier), ""))
+                    .where(buildCreatorGraphPattern(service))
+                    .where(buildLocationGraphPattern(service));
+
+            LOGGER.debug("Issuing SPARQL query :\n{}", selectQuery.getQueryString());
+            TupleQuery tupleQuery = repositoryConnection.prepareTupleQuery(QueryLanguage.SPARQL, selectQuery.getQueryString());
+            ServiceTupleQueryResultHandler serviceTupleQueryResultHandler = new ServiceTupleQueryResultHandler(repositoryConnection);
+            tupleQuery.evaluate(serviceTupleQueryResultHandler);
+            return serviceTupleQueryResultHandler.getServiceList().isEmpty() ?
+                    Optional.empty() :
+                    Optional.of(serviceTupleQueryResultHandler.getServiceList().get(0));
+        } catch (RepositoryException repositoryException) {
+            LOGGER.error("An exception occurred on graphdb repository request {}", repositoryException.getMessage());
+        } catch (MalformedQueryException malformedQueryException) {
+            LOGGER.error("Something wrong in query {}", malformedQueryException.getMessage());
+        }
+
+        return Optional.empty();
+    }
+
     private GraphPattern buildServiceGraphPattern(Variable post, Optional<String> identifier, String language) {
         TriplePattern triplePattern = post.isA((SOCATEL.iri("Service")));
         identifier.ifPresent(s -> triplePattern.andHas(SOCATEL.iri("identifier"), s));

@@ -1,5 +1,6 @@
 extend type Query {
     services(language: String = "", offset: Int = 0, limit: Int = 10): [Service!]!
+    service(identifier: ID!): Service
 }
 
 type Service {

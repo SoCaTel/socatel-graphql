@@ -20,4 +20,9 @@ public class ServiceDataFetchers {
                         dataFetchingEnvironment.getArgument("offset"),
                         dataFetchingEnvironment.getArgument("limit"));
     }
+
+    public DataFetcher service() {
+        return dataFetchingEnvironment ->
+                serviceRepository.getService(dataFetchingEnvironment.getArgument("identifier"));
+    }
 }

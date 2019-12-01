@@ -84,7 +84,8 @@ public class GraphQLProvider {
                         .dataFetcher("posts", postDataFetchers.getPostsDataFetcher())
                         .dataFetcher("postsByTopics", postDataFetchers.getPostsByTopicsDataFetcher())
                         .dataFetcher("searchByTopics", genericDataFetchers.searchByTopicsDataFetcher())
-                        .dataFetcher("services", serviceDataFetchers.services()))
+                        .dataFetcher("services", serviceDataFetchers.services())
+                        .dataFetcher("service", serviceDataFetchers.service()))
                 .scalar(ExtendedScalars.Date)
                 .scalar(ExtendedScalars.DateTime)
                 .build();
