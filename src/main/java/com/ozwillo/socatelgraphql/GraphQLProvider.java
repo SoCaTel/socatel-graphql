@@ -2,6 +2,7 @@ package com.ozwillo.socatelgraphql;
 
 import com.ozwillo.socatelgraphql.fetcher.GenericDataFetchers;
 import com.ozwillo.socatelgraphql.fetcher.PostDataFetchers;
+import com.ozwillo.socatelgraphql.fetcher.ServiceDataFetchers;
 import graphql.GraphQL;
 import graphql.scalars.ExtendedScalars;
 import graphql.schema.GraphQLSchema;
@@ -19,7 +20,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.FileCopyUtils;
 
 import javax.annotation.PostConstruct;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -36,11 +36,14 @@ public class GraphQLProvider {
 
     private final PostDataFetchers postDataFetchers;
     private final GenericDataFetchers genericDataFetchers;
+    private final ServiceDataFetchers serviceDataFetchers;
+
     private final ResourceLoader resourceLoader;
 
-    public GraphQLProvider(PostDataFetchers postDataFetchers, GenericDataFetchers genericDataFetchers, ResourceLoader resourceLoader) {
+    public GraphQLProvider(PostDataFetchers postDataFetchers, GenericDataFetchers genericDataFetchers, ServiceDataFetchers serviceDataFetchers, ResourceLoader resourceLoader) {
         this.postDataFetchers = postDataFetchers;
         this.genericDataFetchers = genericDataFetchers;
+        this.serviceDataFetchers = serviceDataFetchers;
         this.resourceLoader = resourceLoader;
     }
 
@@ -80,7 +83,9 @@ public class GraphQLProvider {
                         .dataFetcher("postById", postDataFetchers.getPostByIdDataFetcher())
                         .dataFetcher("posts", postDataFetchers.getPostsDataFetcher())
                         .dataFetcher("postsByTopics", postDataFetchers.getPostsByTopicsDataFetcher())
-                        .dataFetcher("searchByTopics", genericDataFetchers.searchByTopicsDataFetcher()))
+                        .dataFetcher("searchByTopics", genericDataFetchers.searchByTopicsDataFetcher())
+                        .dataFetcher("services", serviceDataFetchers.services())
+                        .dataFetcher("service", serviceDataFetchers.service()))
                 .scalar(ExtendedScalars.Date)
                 .scalar(ExtendedScalars.DateTime)
                 .build();
