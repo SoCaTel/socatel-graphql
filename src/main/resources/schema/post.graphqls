@@ -33,6 +33,7 @@ type Owner {
     webLink: String
     language: String
     numLikes: Int
+    imageLink: String
 }
 
 type Creator {

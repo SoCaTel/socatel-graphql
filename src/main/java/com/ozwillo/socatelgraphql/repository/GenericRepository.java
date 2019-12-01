@@ -65,7 +65,7 @@ public class GenericRepository {
                 .andHas(SOCATEL.iri("webLink"), var("webLink"))
                 .andHas(SOCATEL.iri("language"), language.isEmpty() || language.length() > 2 ? var("language") : literalOf(language))
                 .andHas(SOCATEL.iri("topic"), topicVar)
-                .and(topicVar.has(SKOS.iri("closeMatch*"), matchedTopic))
+                .and(topicVar.has(SKOS.iri("closeMatch"), matchedTopic))
                 .and(topicVar.has(SKOS.iri("prefLabel | skos:altLabel"), var("label")))
                 .and(matchedTopic.has(SKOS.iri("prefLabel | skos:altLabel"), var("matchedLabel")));
 
