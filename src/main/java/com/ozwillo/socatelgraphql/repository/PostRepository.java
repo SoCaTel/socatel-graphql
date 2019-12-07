@@ -66,6 +66,7 @@ public class PostRepository {
                 var("language"),
                 var("num_likes"),
                 var("num_replies"),
+                var("webLink"),
                 var("location_name"),
                 var("location_alternateName"),
                 var("location_countryCode"),
@@ -231,7 +232,8 @@ public class PostRepository {
                 .andHas(SOCATEL.iri("creationDate"), var("creationDate"))
                 .andHas(SOCATEL.iri("language"), language.isEmpty() || language.length() > 2 ? var("language") : literalOf(language))
                 .andHas(SOCATEL.iri("num_likes"), var("num_likes"))
-                .andHas(SIOC.iri("num_replies"), var("num_replies"));
+                .andHas(SIOC.iri("num_replies"), var("num_replies"))
+                .andHas(SOCATEL.iri("webLink"), var("webLink"));
 
         return triplePattern;
     }

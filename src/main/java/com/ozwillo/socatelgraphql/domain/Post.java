@@ -18,6 +18,8 @@ public class Post {
 
     private Integer numReplies;
 
+    private String webLink;
+
     private Location location;
 
     private Owner owner;
@@ -128,6 +130,9 @@ public class Post {
                 break;
             case "num_replies":
                 numReplies = Integer.valueOf(value);
+                break;
+            case "webLink":
+                webLink = value;
                 break;
             case "topics":
                 topics = Arrays.asList(value.split(","));
