@@ -85,6 +85,7 @@ public class PostRepository {
         ArrayList<Post> postList = new ArrayList<>();
 
         Variable post = var("post");
+        Variable owner = var("owner");
 
         GraphPattern postGraphPattern = buildPostGraphPattern(post, Optional.empty(), "");
 
@@ -111,7 +112,14 @@ public class PostRepository {
         SelectQuery selectQuery = buildPostSelectQuery(this.projectables)
                 .where(postGraphPattern)
                 .where(buildLocationGraphPattern(post))
-                .where(buildOwnerGraphPattern(post))
+                .where(
+                        //TODO: Quick temporary fix related to data duplication issue in the GraphDB
+                        post.has(SIOC.iri("has_owner"), var("owner"))
+                                .and(owner.has(SOCATEL.iri("identifier"), var("owner_identifier")))
+                                .and(owner.has(SOCATEL.iri("title"), var("owner_title")).optional())
+                                .and(owner.has(SOCATEL.iri("webLink"), var("owner_webLink")).optional())
+                                .and(owner.has(SOCATEL.iri("imageLink"), var("owner_imageLink")).optional())
+                )
                 .where(buildCreatorGraphPattern(post))
                 .offset(offset)
                 .limit(limit);
@@ -239,13 +247,13 @@ public class PostRepository {
     private GraphPattern buildOwnerGraphPattern(Variable post) {
         Variable owner = var("owner");
         return post.has(SIOC.iri("has_owner"), var("owner"))
-                .and(owner.has(SOCATEL.iri("identifier"), var("owner_identifier"))
-                        .andHas(SOCATEL.iri("title"), var("owner_title"))
-                        .andHas(SOCATEL.iri("description"), var("owner_description"))
-                        .andHas(SOCATEL.iri("webLink"), var("owner_webLink"))
-                        .andHas(SOCATEL.iri("num_likes"), var("owner_num_likes"))
-                        .andHas(SOCATEL.iri("imageLink"), var("owner_imageLink"))
-                        .andHas(SOCATEL.iri("language"), var("owner_language"))).optional();
+                .and(owner.has(SOCATEL.iri("identifier"), var("owner_identifier")))
+                .and(owner.has(SOCATEL.iri("title"), var("owner_title")).optional())
+                .and(owner.has(SOCATEL.iri("description"), var("owner_description")).optional())
+                .and(owner.has(SOCATEL.iri("webLink"), var("owner_webLink")).optional())
+                .and(owner.has(SOCATEL.iri("num_likes"), var("owner_num_likes")).optional())
+                .and(owner.has(SOCATEL.iri("imageLink"), var("owner_imageLink")).optional())
+                .and(owner.has(SOCATEL.iri("language"), var("owner_language")).optional());
     }
 
     private GraphPattern buildCreatorGraphPattern(Variable post) {
