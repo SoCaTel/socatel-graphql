@@ -58,12 +58,26 @@ public class PostRepository {
         this.repositoryConnection = repository.getConnection();
         this.projectables = new ArrayList<>();
 
-        projectables.addAll(Arrays.asList(var("post"), var("identifier"), var("description"),
-                var("creationDate"), var("language"), var("num_likes"),
-                var("num_replies"), var("location_name"), var("location_alternateName"),
-                var("location_countryCode"), var("owner_identifier"), var("owner_title"),
-                var("owner_description"), var("owner_webLink"), var("owner_language"),
-                var("owner_num_likes"), var("owner_imageLink"), var("creator_name"), var("creator_username")));
+        projectables.addAll(Arrays.asList(
+                var("post"),
+                var("identifier"),
+                var("description"),
+                var("creationDate"),
+                var("language"),
+                var("num_likes"),
+                var("num_replies"),
+                var("location_name"),
+                var("location_alternateName"),
+                var("location_countryCode"),
+                var("owner_identifier"),
+                var("owner_title"),
+                var("owner_description"),
+                var("owner_webLink"),
+                var("owner_language"),
+                var("owner_num_likes"),
+                var("owner_imageLink"),
+                var("creator_name"),
+                var("creator_username")));
     }
 
     public ArrayList<Post> getPosts(LocalDate creationDateFrom, LocalDate creationDateTo, String screenName, Integer offset, Integer limit) {
@@ -99,7 +113,6 @@ public class PostRepository {
                 .where(buildLocationGraphPattern(post))
                 .where(buildOwnerGraphPattern(post))
                 .where(buildCreatorGraphPattern(post))
-                .where(buildTopicGraphPattern(post))
                 .offset(offset)
                 .limit(limit);
 
@@ -131,8 +144,7 @@ public class PostRepository {
                     .where(buildPostGraphPattern(post, Optional.of(identifier), ""))
                     .where(buildLocationGraphPattern(post))
                     .where(buildOwnerGraphPattern(post))
-                    .where(buildCreatorGraphPattern(post))
-                    .where(buildTopicGraphPattern(post));
+                    .where(buildCreatorGraphPattern(post));
 
             LOGGER.debug("Issuing SPARQL query :\n{}", selectQuery.getQueryString());
             TupleQuery tupleQuery = repositoryConnection.prepareTupleQuery(QueryLanguage.SPARQL, selectQuery.getQueryString());
@@ -205,7 +217,8 @@ public class PostRepository {
     private GraphPattern buildPostGraphPattern(Variable post, Optional<String> identifier, String language) {
         TriplePattern triplePattern = post.isA((SOCATEL.iri("Post")));
         identifier.ifPresent(s -> triplePattern.andHas(SOCATEL.iri("identifier"), s));
-        triplePattern.andHas(SOCATEL.iri("identifier"), var("identifier"))
+        triplePattern
+                .andHas(SOCATEL.iri("identifier"), var("identifier"))
                 .andHas(SOCATEL.iri("description"), var("description"))
                 .andHas(SOCATEL.iri("creationDate"), var("creationDate"))
                 .andHas(SOCATEL.iri("language"), language.isEmpty() || language.length() > 2 ? var("language") : literalOf(language))
@@ -231,8 +244,8 @@ public class PostRepository {
                         .andHas(SOCATEL.iri("description"), var("owner_description"))
                         .andHas(SOCATEL.iri("webLink"), var("owner_webLink"))
                         .andHas(SOCATEL.iri("num_likes"), var("owner_num_likes"))
-                        .and(owner.has(SOCATEL.iri("imageLink"), var("owner_imageLink")).optional())
-                        .and(owner.has(SOCATEL.iri("language"), var("owner_language")).optional())).optional();
+                        .andHas(SOCATEL.iri("imageLink"), var("owner_imageLink"))
+                        .andHas(SOCATEL.iri("language"), var("owner_language"))).optional();
     }
 
     private GraphPattern buildCreatorGraphPattern(Variable post) {
