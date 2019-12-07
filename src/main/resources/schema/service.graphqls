@@ -1,13 +1,14 @@
 extend type Query {
     services(language: String = "", offset: Int = 0, limit: Int = 10): [Service!]!
     service(identifier: ID!): Service
+    servicesByTopics(topics: [String!]!, language: String = "", offset: Int = 0, limit: Int = 10): [Service!]!
 }
 
 type Service {
     identifier: ID!
     title: String!
     description: String!
-    language: String!
+    language: String
     webLink: String
     creator: Creator
     location: Location

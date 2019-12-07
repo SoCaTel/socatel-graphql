@@ -25,4 +25,13 @@ public class ServiceDataFetchers {
         return dataFetchingEnvironment ->
                 serviceRepository.getService(dataFetchingEnvironment.getArgument("identifier"));
     }
+
+    public DataFetcher servicesByTopics() {
+        return dataFetchingEnvironment ->
+                serviceRepository.servicesByTopics(
+                        dataFetchingEnvironment.getArgument("topics"),
+                        dataFetchingEnvironment.getArgument("language"),
+                        dataFetchingEnvironment.getArgument("offset"),
+                        dataFetchingEnvironment.getArgument("limit"));
+    }
 }
