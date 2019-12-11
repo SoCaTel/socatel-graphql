@@ -54,7 +54,7 @@ public class GenericRepository {
         GenericDataTupleQueryResultHandler genericDataTupleQueryResultHandler = new GenericDataTupleQueryResultHandler(repositoryConnection);
 
         List<Projectable> basicProjectablesPost =
-                Arrays.asList(var("data"), var("identifier"), var("description"), var("type"), var("webLink"));
+                Arrays.asList(var("data"), var("identifier"), var("name"), var("description"), var("type"), var("webLink"));
 
         Variable data = var("data");
         Variable topicVar = var("topic");
@@ -63,6 +63,7 @@ public class GenericRepository {
         GraphPattern graphPattern = data.isA(var("type"))
                 .andHas(SOCATEL.iri("identifier"), var("identifier"))
                 .andHas(SOCATEL.iri("webLink"), var("webLink"))
+                .andHas(SOCATEL.iri("title"), var("name"))
                 .andHas(SOCATEL.iri("language"), language.isEmpty() || language.length() > 2 ? var("language") : literalOf(language))
                 .andHas(SOCATEL.iri("topic"), topicVar)
                 .and(topicVar.has(SKOS.iri("closeMatch"), matchedTopic))
