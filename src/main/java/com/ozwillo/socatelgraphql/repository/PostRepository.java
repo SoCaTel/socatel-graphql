@@ -188,10 +188,7 @@ public class PostRepository {
 
         if(!topics.isEmpty()) {
             String topicsRegex = String.join("|", topics);
-            expressions.add(
-                    Expressions.or(
-                            Expressions.regex(Expressions.str(var("label")), literalOf(topicsRegex), literalOf("i")),
-                            Expressions.regex(Expressions.str(var("matchedLabel")), literalOf(topicsRegex), literalOf("i"))));
+            expressions.add(Expressions.regex(Expressions.str(var("label")), literalOf(topicsRegex), literalOf("i")));
         }
 
         if (!expressions.isEmpty()) {
@@ -199,11 +196,13 @@ public class PostRepository {
         }
 
         SelectQuery selectQuery = Queries.SELECT()
-                .prefix(SOCATEL, RDF, SIOC, SKOS)
-                .select(basicProjectablesPost.toArray(new Projectable[basicProjectablesPost.size()]))
+                .prefix(SOCATEL, RDF, SIOC, GN, FOAF, SKOS)
+                .select(projectables.toArray(new Projectable[projectables.size()]))
                 .where(postGraphPattern)
+                .where(buildOwnerGraphPattern(post))
+                .where(buildCreatorGraphPattern(post))
+                .where(buildLocationGraphPattern(post))
                 .where(buildTopicCloseMatchGraphPattern(post))
-                .groupBy(basicProjectablesPost.toArray(new Groupable[basicProjectablesPost.size()]))
                 .offset(offset)
                 .limit(limit);
 
@@ -287,8 +286,6 @@ public class PostRepository {
         Variable matchedTopic = var("matchedTopic");
 
         return post.has(SOCATEL.iri("topic"), var("topic"))
-            .and(topic.has(SKOS.iri("closeMatch"), matchedTopic))
-            .and(topic.has(SKOS.iri("prefLabel | skos:altLabel"), var("label")))
-            .and(matchedTopic.has(SKOS.iri("prefLabel | skos:altLabel"), var("matchedLabel"))).optional();
+            .and(topic.has(SKOS.iri("prefLabel | skos:altLabel"), var("label")));
     }
 }
