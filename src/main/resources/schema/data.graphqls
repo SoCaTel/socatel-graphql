@@ -5,6 +5,6 @@ extend type Query {
 type Data {
     identifier: ID!
     name: String
-    webLink: String!
+    webLink: String
     type: String!
 }
