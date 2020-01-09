@@ -42,6 +42,8 @@ public class GenericDataTupleQueryResultHandler implements TupleQueryResultHandl
 
     @Override
     public void handleSolution(BindingSet bindingSet) throws TupleQueryResultHandlerException {
+        //TODO: find a SPARQL query solution to stop doing this check
+        if(!bindingSet.hasBinding("data")) return; // Quick fix
         HashMap<String, String> data = new HashMap<>();
         bindingSet.getBindingNames().forEach(bindingName -> {
             data.put(bindingName, bindingSet.getValue(bindingName).stringValue());
